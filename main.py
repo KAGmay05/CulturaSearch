@@ -16,9 +16,9 @@ def save_movie_urls(urls):
 
 if __name__ == "__main__":
 
-    seeds = load_seeds("seeds/seed_film_affinity.json")
+    seeds = [load_seeds("seeds/seed_film_affinity.json")[0]]
 
-    movie_urls = crawl(seeds, max_pages=10)
+    movie_urls = crawl(seeds, max_pages=20)
 
     save_movie_urls(movie_urls)
 
