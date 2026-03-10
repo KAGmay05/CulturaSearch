@@ -21,7 +21,6 @@ def fetch(url):
             return response.text
 
         else:
-            print(f"Error {response.status_code} for URL: {url}")
             return None
 
     except Exception as e:

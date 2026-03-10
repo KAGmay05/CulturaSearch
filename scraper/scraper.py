@@ -16,7 +16,7 @@ headers = {
 
 def fetch(url):
 
-    for _ in range(3):   # retry 3 veces
+    for _ in range(3):   
 
         try:
             response = requests.get(url, headers=headers, timeout=10)
@@ -40,9 +40,10 @@ def parse_movie(html, url):
 
     title = soup.find("h1")
     if title:
-        data["title"] = title.text.strip()
+        clean_title = title.text.strip().split("\n")[0]
+        data["title"] = clean_title
 
-    year = soup.find("span", class_="date")       
+    year = soup.select_one("dd[itemprop='datePublished']")       
     if year:
         data["year"] = year.text.strip()
 
@@ -56,15 +57,46 @@ def parse_movie(html, url):
 
     data["genres"] = genres
 
+    if "Serie de TV" in genres:
+        data["type"] = "serie"
+
+    else:
+        data["type"] = "pelicula"        
+
     plot = soup.find("dd", itemprop="description")
     if plot:
         data["plot"] = plot.text.strip()
 
     actors = []
-    for a in soup.select("span[itemprop='actor']"):
-        actors.append(a.text.strip())
+
+    for dt in soup.select("dt"):
+      if "Reparto" in dt.text:
+        dd = dt.find_next("dd")
+
+        if dd:
+            for a in dd.select("a"):
+                actors.append(a.text.strip())
+
+        break
 
     data["actors"] = actors
+
+    directors = []
+    for d in soup.select('[itemprop="director"] span[itemprop="name"]'):
+        directors.append(d.text.strip())
+
+    data["director"] = directors
+
+    country = None
+
+    for dt in soup.select("dt"):
+      if "País" in dt.text:
+        dd = dt.find_next("dd")
+        if dd:
+            country = dd.text.strip()
+            break
+
+    data["country"] = country
 
     return data
 

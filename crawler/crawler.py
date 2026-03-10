@@ -2,9 +2,10 @@ from crawler.fetcher import fetch
 from crawler.parser import extract_links
 
 
-def crawl(seed_urls, max_pages=20):
+def crawl(seed_urls, max_pages=10):
 
     movie_urls = set()
+    series_urls = set()
 
     for seed in seed_urls:
 
@@ -25,17 +26,19 @@ def crawl(seed_urls, max_pages=20):
                 print("[WARN] HTML vacío")
                 continue
 
-            movie_links, _ = extract_links(html, url)
+            movie_links, series_links = extract_links(html, url)
 
-            before = len(movie_urls)
+            before_movies = len(movie_urls)
+            before_series = len(series_urls)
             movie_urls.update(movie_links)
-            new_found = len(movie_urls) - before
+            series_urls.update(series_links)
 
             print(
-                f"[INFO] Página {page}: "
-                f"{len(movie_links)} encontradas | "
-                f"{new_found} nuevas | "
-                f"total={len(movie_urls)}"
+               f"[INFO] Página {page}: "
+               f"{len(movie_urls) - before_movies} nuevas películas | "
+               f"{len(series_urls) - before_series} nuevas series | "
+               f"total_movies={len(movie_urls)} | "
+               f"total_series={len(series_urls)}"
             )
 
-    return movie_urls
+    return movie_urls, series_urls
