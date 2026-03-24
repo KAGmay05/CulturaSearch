@@ -23,8 +23,8 @@ def crawl(seed_urls, max_pages=10):
             html = fetch(url)
 
             if not html:
-                print("[WARN] HTML vacío")
-                continue
+                print("[WARN] HTML vacío, fin de resultados para esta semilla")
+                break
 
             movie_links, series_links = extract_links(html, url)
 
