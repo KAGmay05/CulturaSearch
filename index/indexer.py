@@ -28,9 +28,14 @@ def build_index(path):
         url = mov['url'] 
         title = str(mov.get('title', "")) #todo sea string, ni listas ni vacio 
         plot = str(mov.get('plot', ""))
+        year = str(mov.get('year', ""))
+        rating = str(mov.get('rating', ""))
+        media_type = str(mov.get('type', ""))
+        country = str(mov.get('country', ""))
         genres = " ".join(mov['genres']) if isinstance(mov.get('genres'), list) else str(mov.get('genres', ""))
         actors = " ".join(mov['actors']) if isinstance(mov.get('actors'), list) else str(mov.get('actors', ""))
-        text = f"{title} {genres} {plot} {actors}" #nos quedamos solo el titulo, genero, trama, director y actores
+        directors = " ".join(mov['director']) if isinstance(mov.get('director'), list) else str(mov.get('director', ""))
+        text = f"{title} {year} {rating} {media_type} {country} {genres} {directors} {plot} {actors}" #texto completo para indexacion
         tokens = clean_text(text) #luego aplicamos la funcion clean text a todo ese texto
         for tok in tokens:  #agregamos cada palabra al dicionario, agragamos tambien la cantidad de veces que aparece en una url
             if tok not in index:

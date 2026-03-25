@@ -37,7 +37,45 @@ En terminos de IR neuronal, este enfoque corresponde a un esquema bi-encoder (du
 
 Este diseno permite indexar el corpus una vez y reutilizar los embeddings para multiples consultas.
 
-### 2.2 Flujo implementado en el proyecto
+### 2.2 Modelo hibrido: motivacion y arquitectura
+
+Si bien el enfoque puramente neuronal es efectivo, se ha evolucionado hacia un **modelo hibrido** que combina embeddings densos con indexacion lexico-estadistica (TF-IDF) para obtener mayor precision y cobertura.
+
+#### Por que hibrido?
+
+Un modelo hibrido combina dos paradigmas complementarios:
+
+1. **Recuperacion densa (embeddings neurales)**:
+   - Captura relaciones semanticas profundas entre consulta y documentos.
+   - Funciona bien con parafraseos y sinonimos.
+   - Entiende intencionalidad semantica detras de la consulta.
+
+2. **Recuperacion lexico-estadistica (TF-IDF)**:
+   - Excelente para coincidencias de terminos exactos y frecuencia.
+   - El efecto IDF captura la importancia de palabras poco comunes.
+   - Soporta busquedas por metadatos especificos (directores, paises, actores).
+
+#### Ventajas de la combinacion
+
+- **Mayor cobertura**: Algunos documentos relevantes se recuperan por semantica, otros por exactitud lexical.
+- **Mayor precision**: En consultas que mencionan tipos explicitamente ("dame una serie policial"), se aplican restricciones de metadatos.
+- **Robustez**: Si la semantica falla en un ambito, la lexical compensa (y viceversa).
+- **Escalabilidad**: El indice lexico es ligero y rapido, permitiendo filtrado eficiente antes del ranking neural.
+
+#### Arquitectura de dos etapas
+
+**Etapa 1: Recuperacion de candidatos (hibrida)**
+- Busqueda densa: top-50 resultados por similitud coseno de embeddings.
+- Busqueda lexico-estadistica: puntuacion TF-IDF para terminos de consulta.
+- Fusion adaptativa: combinacion ponderada neural + lexico con peso ajustable ($\alpha$).
+- Restricciones de tipo: filtro o penalizacion para consultas que especifican "serie" o "pelicula".
+
+**Etapa 2: Re-ranking neuronal (CrossEncoder)**
+- Los candidatos se re-evaluan con un modelo CrossEncoder especializado.
+- El CrossEncoder analiza directamente cada par (consulta, documento) en lugar de embeddings independientes.
+- Fusion final: score base combinado con score de re-ranking mediante fusion ponderada para mayor precision.
+
+### 2.3 Flujo implementado en el proyecto
 
 1. Carga de documentos desde [data/movies.json](data/movies.json).
 2. Construccion de texto por documento usando campos: titulo + generos + plot + actores.
@@ -75,7 +113,7 @@ Detalle del pipeline interno:
 - Se calcula similitud coseno contra toda la matriz.
 - Se retorna top-k ordenado de mayor a menor score.
 
-### 2.3 Funcion de ranking
+### 2.4 Funcion de ranking
 
 La similitud utilizada es coseno:
 
@@ -105,7 +143,7 @@ Procedimiento de ranking implementado:
 
 Para el ordenamiento se usa una estrategia exacta sobre todo el corpus (no aproximada), adecuada para el volumen actual del corte 1.
 
-### 2.4 Analisis de complejidad y comportamiento
+### 2.5 Analisis de complejidad y comportamiento
 
 Si $N$ es el numero de documentos y $D$ la dimension del embedding:
 
@@ -115,7 +153,7 @@ Si $N$ es el numero de documentos y $D$ la dimension del embedding:
 
 Para el corpus actual (1370 documentos), este costo es aceptable en CPU para una primera entrega.
 
-### 2.5 Criterios de desempate y estabilidad del ranking
+### 2.6 Criterios de desempate y estabilidad del ranking
 
 El criterio primario de orden es el score de similitud coseno.
 
@@ -125,7 +163,7 @@ Cuando dos documentos tienen scores muy cercanos, el orden relativo depende del 
 - mayor completitud de metadatos,
 - popularidad o rating.
 
-### 2.6 Fortalezas y limitaciones del enfoque actual
+### 2.7 Fortalezas y limitaciones del enfoque actual
 
 Fortalezas:
 
@@ -145,7 +183,7 @@ Mejoras naturales para siguiente corte:
 - Re-ranking con cross-encoder sobre top-k inicial.
 - Combinacion hibrida: BM25 + denso (fusion de rankings).
 
-### 2.7 Justificacion tecnica
+### 2.8 Justificacion tecnica
 
 El enfoque neuronal mejora frente a modelos puramente lexicales porque:
 
