@@ -65,12 +65,14 @@ Un modelo hibrido combina dos paradigmas complementarios:
 #### Arquitectura de dos etapas
 
 **Etapa 1: Recuperacion de candidatos (hibrida)**
+
 - Busqueda densa: top-50 resultados por similitud coseno de embeddings.
 - Busqueda lexico-estadistica: puntuacion TF-IDF para terminos de consulta.
 - Fusion adaptativa: combinacion ponderada neural + lexico con peso ajustable ($\alpha$).
 - Restricciones de tipo: filtro o penalizacion para consultas que especifican "serie" o "pelicula".
 
 **Etapa 2: Re-ranking neuronal (CrossEncoder)**
+
 - Los candidatos se re-evaluan con un modelo CrossEncoder especializado.
 - El CrossEncoder analiza directamente cada par (consulta, documento) en lugar de embeddings independientes.
 - Fusion final: score base combinado con score de re-ranking mediante fusion ponderada para mayor precision.
@@ -82,6 +84,7 @@ Un modelo hibrido combina dos paradigmas complementarios:
 3. Codificacion neuronal del corpus con SentenceTransformer.
 4. Almacenamiento de la base vectorial inicial en [bd/movies_vectors.pkl](bd/movies_vectors.pkl).
 5. En consulta:
+
 - Se codifica la consulta con el mismo modelo.
 - Se calcula similitud coseno contra todos los documentos.
 - Se ordenan resultados de mayor a menor similitud (top-k).
@@ -94,14 +97,17 @@ Implementacion principal:
 Detalle del pipeline interno:
 
 1. Preprocesamiento estructural:
+
 - Se consolidan campos relevantes en una sola cadena semantica por documento.
 - Se conserva informacion de contenido (plot) y contexto (generos, actores).
 
 2. Indexacion densa:
+
 - Cada cadena se codifica con el modelo multilingual MiniLM.
 - El resultado es una matriz de embeddings de dimension fija.
 
 3. Persistencia de indice:
+
 - Se serializa en [bd/movies_vectors.pkl](bd/movies_vectors.pkl) el conjunto:
   - urls
   - embeddings
@@ -109,6 +115,7 @@ Detalle del pipeline interno:
   - nombre del modelo
 
 4. Recuperacion en tiempo de consulta:
+
 - Se codifica la consulta con el mismo encoder.
 - Se calcula similitud coseno contra toda la matriz.
 - Se retorna top-k ordenado de mayor a menor score.
