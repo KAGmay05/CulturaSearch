@@ -1,0 +1,6 @@
+__pycache__/
+*.py[cod]
+
+data/
+movies_test.json
+movies_urls_test.json

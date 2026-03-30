@@ -1,0 +1,17 @@
+[
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=DR&country=&fromyear=1960&toyear=1969&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=HO&country=&fromyear=1970&toyear=1979&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=FAN&country=&fromyear=1980&toyear=1989&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=AC&country=&fromyear=1990&toyear=1999&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=CO&country=&fromyear=2000&toyear=2004&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=TH&country=&fromyear=2005&toyear=2009&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=DR&genre%5B%5D=CO&country=&fromyear=2010&toyear=2014&ratingcount=5&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=AC&genre%5B%5D=TH&country=&fromyear=2010&toyear=2014&ratingcount=5&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=DR&country=&fromyear=2015&toyear=2018&ratingcount=3&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=TH&country=&fromyear=2019&toyear=2022&ratingcount=3&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=CO&country=&fromyear=2023&toyear=2026&ratingcount=3&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=AN&country=&fromyear=2000&toyear=2020&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=HO&genre%5B%5D=FAN&country=&fromyear=1990&toyear=2020&ratingcount=1&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=DR&genre%5B%5D=AC&country=&fromyear=1980&toyear=2020&ratingcount=5&runtimemin=0&runtimemax=",
+    "https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=CO&genre%5B%5D=DR&country=&fromyear=1975&toyear=1995&ratingcount=1&runtimemin=0&runtimemax="
+]
