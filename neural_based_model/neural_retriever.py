@@ -10,12 +10,14 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 from sklearn.metrics.pairwise import cosine_similarity
 
 from index import indexer
+from web_search.web_expander import WebExpander
 
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 DEFAULT_RERANKER_MODEL_NAME = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
 DEFAULT_DATASET_PATH = "data/movies.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
+DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
 
 
 @dataclass
@@ -40,13 +42,16 @@ class NeuralRetriever:
         reranker_model_name: str = DEFAULT_RERANKER_MODEL_NAME,
         dataset_path: str = DEFAULT_DATASET_PATH,
         vector_db_path: str = DEFAULT_VECTOR_DB_PATH,
+        web_cache_path: str = DEFAULT_WEB_CACHE_PATH,
     ) -> None:
         self.model_name = model_name
         self.reranker_model_name = reranker_model_name
         self.dataset_path = dataset_path
         self.vector_db_path = vector_db_path
+        self.web_cache_path = web_cache_path
         self.model = SentenceTransformer(self.model_name)
         self.reranker: CrossEncoder | None = None
+        self.web_expander: WebExpander | None = None
 
         self.documents: List[Dict] = []
         self.urls: List[str] = []
@@ -112,7 +117,23 @@ class NeuralRetriever:
         if not isinstance(dataset, list) or not dataset:
             raise ValueError("El archivo data/movies.json esta vacio o no tiene el formato esperado.")
 
-        return dataset
+        merged_documents = list(dataset)
+        seen_urls = {str(doc.get("url", "")) for doc in merged_documents if doc.get("url")}
+
+        if os.path.exists(self.web_cache_path):
+            with open(self.web_cache_path, "r", encoding="utf-8") as f:
+                cached_docs = json.load(f)
+
+            if isinstance(cached_docs, list):
+                for doc in cached_docs:
+                    if not isinstance(doc, dict):
+                        continue
+                    url = str(doc.get("url", ""))
+                    if url and url not in seen_urls:
+                        merged_documents.append(doc)
+                        seen_urls.add(url)
+
+        return merged_documents
 
     def _build_lexical_index(self) -> None:
         self.lexical_index = {}
@@ -147,13 +168,42 @@ class NeuralRetriever:
 
         return scores
 
+    def _query_lexical_coverage(self, query: str) -> float:
+        tokens = set(indexer.clean_text(query))
+        if not tokens:
+            return 0.0
+
+        covered = sum(1 for token in tokens if token in self.lexical_index)
+        return float(covered) / float(len(tokens))
+
+    def _load_web_expander(self) -> WebExpander:
+        if self.web_expander is None:
+            self.web_expander = WebExpander(
+                cache_path=self.web_cache_path,
+                seed_file_paths=["seeds/seed_film_affinity.json", "seeds/seed_sensacine.json"],
+            )
+        return self.web_expander
+
     def build_vector_db(self, force_rebuild: bool = False) -> None:
+        expected_documents = self._load_dataset()
+        expected_count = len(expected_documents)
+
         if os.path.exists(self.vector_db_path) and not force_rebuild:
             self.load_vector_db()
-            self._build_lexical_index()
-            return
+            embeddings_count = int(self.embeddings.shape[0]) if self.embeddings is not None and self.embeddings.ndim > 0 else 0
+            documents_count = len(self.documents)
+            urls_count = len(self.urls)
 
-        self.documents = self._load_dataset()
+            # Reuse existing vector DB only when all index components are aligned.
+            if (
+                documents_count == expected_count
+                and embeddings_count == expected_count
+                and urls_count == expected_count
+            ):
+                self._build_lexical_index()
+                return
+
+        self.documents = expected_documents
         self.urls = [str(doc.get("url", "")) for doc in self.documents]
         self.url_to_doc_idx = {url: idx for idx, url in enumerate(self.urls)}
 
@@ -368,4 +418,46 @@ class NeuralRetriever:
             top_k=top_k,
             rerank_weight=rerank_weight,
             reranker_model_name=reranker_model_name,
+        )
+
+    def search_with_web_expansion(
+        self,
+        query: str,
+        top_k: int = 5,
+        candidate_k: int = 50,
+        alpha: float = 0.9,
+        rerank_weight: float = 0.75,
+        min_local_score: float = 1,
+        min_lexical_coverage: float = 1,
+        web_max_results: int = 10,
+    ) -> List[SearchResult]:
+        local_results = self.search_advanced(
+            query=query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            alpha=alpha,
+            rerank_weight=rerank_weight,
+        )
+
+        top_score = float(local_results[0].score) if local_results else 0.0
+        lexical_coverage = self._query_lexical_coverage(query)
+        needs_web_expansion = top_score < min_local_score or lexical_coverage < min_lexical_coverage
+
+        if not needs_web_expansion:
+            return local_results
+
+        web_expander = self._load_web_expander()
+        web_documents = web_expander.expand(query=query, max_results=web_max_results)
+
+        if not web_documents:
+            return local_results
+
+        self.build_vector_db(force_rebuild=True)
+
+        return self.search_advanced(
+            query=query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            alpha=alpha,
+            rerank_weight=rerank_weight,
         )
