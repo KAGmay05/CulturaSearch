@@ -156,15 +156,36 @@ class NeuralRetriever:
             return scores
 
         query_tf = Counter(query_tokens)
+        print(f"\n[LEXICAL DEBUG] Query: '{query}'")
+        print(f"[LEXICAL DEBUG] Query tokens after cleaning: {query_tokens}")
+        print(f"[LEXICAL DEBUG] Query TF: {dict(query_tf)}")
+        
+        # Para cada documento, trackear qué tokens se encontraron
+        found_tokens_per_doc = {i: set() for i in range(len(self.documents))}
+        
         for token, qtf in query_tf.items():
             posting = self.lexical_index.get(token)
             if not posting:
+                print(f"[LEXICAL DEBUG]   Token '{token}': NOT in index")
                 continue
             df = len(posting)
             # Downweight very common terms (e.g., "serie", "comedia") to reduce lexical noise.
             idf = float(np.log((self.doc_count + 1) / (df + 1)) + 1.0)
+            #print(f"[LEXICAL DEBUG]   Token '{token}': found in {df} docs, IDF={idf:.2f}")
             for doc_idx, dtf in posting.items():
                 scores[doc_idx] += qtf * dtf * idf
+                found_tokens_per_doc[doc_idx].add(token)
+        
+        # Penalizar documentos que no tienen todos los tokens de la query
+        required_tokens = set(query_tf.keys())
+        #print(f"[LEXICAL DEBUG] Required tokens: {required_tokens}")
+        for doc_idx in range(len(self.documents)):
+            found = found_tokens_per_doc[doc_idx]
+            missing = required_tokens - found
+            if missing:
+                penalty_factor = (len(required_tokens) - len(missing)) / len(required_tokens)
+                scores[doc_idx] *= penalty_factor
+                #print(f"[LEXICAL DEBUG]   Doc #{doc_idx} ({self.documents[doc_idx].get('title', 'N/A')}): missing {missing}, penalty factor={penalty_factor:.2f}")
 
         return scores
 

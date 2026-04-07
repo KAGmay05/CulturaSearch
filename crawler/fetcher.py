@@ -21,11 +21,13 @@ def fetch(url):
             return response.text
 
         else:
+            print(f"[FETCH] Status {response.status_code} para: {url}")
+            print(f"[FETCH] Response headers: {dict(response.headers)}")
             return None
 
     except Exception as e:
 
-        print(f"Request failed: {url}")
-        print(e)
+        print(f"[FETCH] Request failed: {url}")
+        print(f"[FETCH] Error: {e}")
 
         return None

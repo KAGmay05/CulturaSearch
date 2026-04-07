@@ -55,7 +55,7 @@ def main() -> None:
     print_indexing_stats(retriever)
 
     test_queries = [
-        "pelicula de tom y jerry",
+        "tom y jerry",
     ]
 
     for query in test_queries:
