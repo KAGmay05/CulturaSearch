@@ -17,7 +17,7 @@ DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 DEFAULT_RERANKER_MODEL_NAME = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
 DEFAULT_DATASET_PATH = "data/movies.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
-DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
+DEFAULT_WEB_CACHE_PATH = "data/web_cache_sensacine.json"
 
 
 @dataclass
@@ -201,7 +201,7 @@ class NeuralRetriever:
         if self.web_expander is None:
             self.web_expander = WebExpander(
                 cache_path=self.web_cache_path,
-                seed_file_paths=["seeds/seed_film_affinity.json", "seeds/seed_sensacine.json"],
+                seed_file_paths=["seeds/seed_sensacine.json"],
             )
         return self.web_expander
 
@@ -448,8 +448,9 @@ class NeuralRetriever:
         candidate_k: int = 50,
         alpha: float = 0.9,
         rerank_weight: float = 0.75,
-        min_local_score: float = 1,
-        min_lexical_coverage: float = 1,
+        min_local_score: float = 0.72,
+        min_lexical_coverage: float = 0.75,
+        hard_min_local_score: float = 0.55,
         web_max_results: int = 10,
     ) -> List[SearchResult]:
         local_results = self.search_advanced(
@@ -462,7 +463,10 @@ class NeuralRetriever:
 
         top_score = float(local_results[0].score) if local_results else 0.0
         lexical_coverage = self._query_lexical_coverage(query)
-        needs_web_expansion = top_score < min_local_score or lexical_coverage < min_lexical_coverage
+
+        needs_web_expansion = (top_score < hard_min_local_score) or (
+            (top_score < min_local_score) and (lexical_coverage < min_lexical_coverage)
+        )
 
         if not needs_web_expansion:
             return local_results
