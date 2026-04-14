@@ -4,8 +4,15 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 MAX_WORKERS = 5 
 
+# Leer URLs de películas y series
 with open("data/movie_urls.json", "r") as f:
-    urls = json.load(f)
+    movie_urls = json.load(f)
+
+with open("data/series_urls.json", "r") as f:
+    series_urls = json.load(f)
+
+# Combinar ambas listas
+urls = movie_urls + series_urls
 
 movies = []
 
@@ -21,7 +28,7 @@ with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
 
         try:
             movie = future.result()
-            if movie:
+            if movie:  # Solo agregar si no es None (filtra críticas)
                 movies.append(movie)
 
         except Exception as e:
