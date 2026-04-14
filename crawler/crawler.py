@@ -16,7 +16,9 @@ def crawl(seed_urls, max_pages=10):
             if page == 1:
                 url = seed
             else:
-                url = f"{seed}&page={page}"
+                # Detecta si la URL ya tiene parámetros query
+                separator = "&" if "?" in seed else "?"
+                url = f"{seed}{separator}page={page}"
 
             print(f"[INFO] Visitando: {url}")
 
