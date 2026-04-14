@@ -55,19 +55,21 @@ def main() -> None:
     print_indexing_stats(retriever)
 
     test_queries = [
-        "pelicula de comedia española",
+        "tom y jerry",
     ]
 
     for query in test_queries:
         print_query_lexical_stats(query, retriever)
         results = retriever.search_advanced(
             query=query,
-            top_k=3,
-            candidate_k=40,
+            top_k=5,
+            candidate_k=50,
             alpha=0.9,
             rerank_weight=0.75,
         )
         print_results(query, results)
+        new_results = retriever.search_with_web_expansion(query)
+        print_results(query + " (con expansion web)", new_results)
 
 
 if __name__ == "__main__":
