@@ -9,6 +9,7 @@ import numpy as np
 from collections import Counter
 from sentence_transformers import CrossEncoder, SentenceTransformer
 
+from bd import vectorizer as bd_vectorizer
 from index import indexer
 from web_search.web_expander import WebExpander
 
@@ -274,38 +275,16 @@ class NeuralRetriever:
                 return
 
         self.documents = expected_documents
-        self.urls = [str(doc.get("url", "")) for doc in self.documents]
-        self.url_to_doc_idx = {url: idx for idx, url in enumerate(self.urls)}
-
-        corpus = [self._build_text(doc) for doc in self.documents]
-        vectors = self.model.encode(corpus, show_progress_bar=True).astype(np.float32)
-        self.embeddings = np.ascontiguousarray(vectors)
-        faiss.normalize_L2(self.embeddings)
-
-        dim = int(self.embeddings.shape[1])
-        self.faiss_index = faiss.IndexFlatIP(dim)
-        self.faiss_index.add(self.embeddings)
-
-        metadata_payload = {
-            "urls": self.urls,
-            "documents": self.documents,
-            "model_name": self.model_name,
-            "index_type": "IndexFlatIP",
-            "vector_count": int(self.embeddings.shape[0]),
-            "vector_dim": dim,
-            "dtype": str(self.embeddings.dtype),
-            "normalized": True,
-            "similarity": "cosine_via_ip",
-        }
-
-        os.makedirs(os.path.dirname(self.vector_index_path), exist_ok=True)
-        faiss.write_index(self.faiss_index, self.vector_index_path)
-
-        os.makedirs(os.path.dirname(self.vector_metadata_path), exist_ok=True)
-        with open(self.vector_metadata_path, "wb") as f:
-            pickle.dump(metadata_payload, f)
-
-        self._build_lexical_index()
+        bd_vectorizer.build_embeddings(
+            documents=self.documents,
+            model_name=self.model_name,
+            index_path=self.vector_index_path,
+            metadata_path=self.vector_metadata_path,
+            include_documents=True,
+            text_builder=self._build_text,
+            model=self.model,
+        )
+        self.load_vector_db()
 
     def load_vector_db(self) -> None:
         if not (os.path.exists(self.vector_index_path) and os.path.exists(self.vector_metadata_path)):
@@ -360,15 +339,24 @@ class NeuralRetriever:
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
 
-        if self.embeddings is None:
+        if self.embeddings is None or self.faiss_index is None:
             self.ensure_ready()
 
-        scores, indices = self._search_faiss_topk(query=query, top_k=top_k)
+        raw_results = bd_vectorizer.search_by_similarity(
+            query=query,
+            top_k=top_k,
+            index=self.faiss_index,
+            model=self.model,
+            urls=self.urls,
+            return_indices=True,
+        )
 
         results: List[SearchResult] = []
-        rank = 1
-        for idx, score in zip(indices, scores):
-            if idx < 0:
+        for item in raw_results:
+            idx = int(item.get("index", -1))
+            score = float(item.get("score", 0.0))
+            rank = int(item.get("rank", len(results) + 1))
+            if idx < 0 or idx >= len(self.documents):
                 continue
             doc = self.documents[idx]
             results.append(
@@ -384,7 +372,6 @@ class NeuralRetriever:
                     rerank_score=0.0,
                 )
             )
-            rank += 1
 
         return results
 
