@@ -3,6 +3,11 @@ from index import indexer
 
 
 def print_indexing_stats(retriever: NeuralRetriever) -> None:
+    """Prints indexing-level diagnostics for the loaded retriever state.
+
+    Reports document count, embedding matrix shape and lexical index density
+    to validate that vector and lexical structures are aligned.
+    """
     docs = len(retriever.documents)
     emb_shape = retriever.embeddings.shape if retriever.embeddings is not None else (0, 0)
     vocab_size = len(retriever.lexical_index)
@@ -19,6 +24,12 @@ def print_indexing_stats(retriever: NeuralRetriever) -> None:
 
 
 def print_query_lexical_stats(query: str, retriever: NeuralRetriever) -> None:
+    """Prints lexical coverage diagnostics for a user query.
+
+    The function tokenizes the query with the project text normalizer,
+    estimates token coverage in the lexical index and counts docs with
+    non-zero lexical contribution.
+    """
     tokens = indexer.clean_text(query)
     unique_tokens = sorted(set(tokens))
     covered_tokens = [tok for tok in unique_tokens if tok in retriever.lexical_index]
@@ -35,6 +46,11 @@ def print_query_lexical_stats(query: str, retriever: NeuralRetriever) -> None:
 
 
 def print_results(query: str, results) -> None:
+    """Renders ranked retrieval results in a compact, human-readable format.
+
+    Includes fused, neural, lexical and reranker scores plus a short plot
+    snippet to quickly inspect relevance.
+    """
     print(f"\nConsulta: {query}")
     print("-" * 80)
     for item in results:
@@ -50,6 +66,11 @@ def print_results(query: str, results) -> None:
 
 
 def main() -> None:
+    """Runs an end-to-end demo of local and web-expanded retrieval.
+
+    Loads the retriever, prints corpus stats, executes test queries,
+    and compares base advanced search against web expansion mode.
+    """
     retriever = NeuralRetriever()
     retriever.ensure_ready(force_rebuild=False)
     print_indexing_stats(retriever)

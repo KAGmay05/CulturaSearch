@@ -49,6 +49,7 @@ class NeuralRetriever:
         vector_metadata_path: str = DEFAULT_VECTOR_METADATA_PATH,
         web_cache_path: str = DEFAULT_WEB_CACHE_PATH,
     ) -> None:
+        """Initializes model, storage paths and in-memory search structures."""
         self.model_name = model_name
         self.reranker_model_name = reranker_model_name
         self.dataset_path = dataset_path
@@ -70,12 +71,14 @@ class NeuralRetriever:
         self.doc_count: int = 0
 
     def _encode_query_normalized(self, query: str) -> np.ndarray:
+        """Encodes a query into a normalized float32 embedding row vector."""
         q = self.model.encode([query]).astype(np.float32)
         q = np.ascontiguousarray(q)
         faiss.normalize_L2(q)
         return q
 
     def _rebuild_embeddings_from_index(self) -> None:
+        """Reconstructs all vectors from FAISS into a dense numpy matrix."""
         if self.faiss_index is None:
             raise ValueError("El indice FAISS no esta cargado.")
         emb_rows: List[np.ndarray] = []
@@ -83,15 +86,8 @@ class NeuralRetriever:
             emb_rows.append(self.faiss_index.reconstruct(i))
         self.embeddings = np.array(emb_rows, dtype=np.float32)
 
-    def _search_faiss_topk(self, query: str, top_k: int) -> tuple[np.ndarray, np.ndarray]:
-        if self.faiss_index is None:
-            raise ValueError("El indice FAISS no esta cargado.")
-        query_vector = self._encode_query_normalized(query)
-        top_k = max(1, min(top_k, int(self.faiss_index.ntotal)))
-        scores, indices = self.faiss_index.search(query_vector, top_k)
-        return scores[0], indices[0]
-
     def _load_metadata(self) -> Dict:
+        """Loads metadata payload and adapts legacy formats for compatibility."""
         if not os.path.exists(self.vector_metadata_path):
             raise FileNotFoundError(f"No se encontro metadata en: {self.vector_metadata_path}")
         with open(self.vector_metadata_path, "rb") as f:
@@ -109,6 +105,7 @@ class NeuralRetriever:
         return payload
 
     def _load_reranker(self, model_name: str | None = None) -> CrossEncoder:
+        """Lazily loads and caches the cross-encoder reranker model."""
         if self.reranker is not None and (model_name is None or model_name == self.reranker_model_name):
             return self.reranker
 
@@ -119,9 +116,11 @@ class NeuralRetriever:
 
     @staticmethod
     def _sigmoid(values: np.ndarray) -> np.ndarray:
+        """Applies a sigmoid transform to map raw scores into [0, 1]."""
         return 1.0 / (1.0 + np.exp(-values))
 
     def _build_text(self, movie: Dict) -> str:
+        """Builds the canonical searchable text representation for one document."""
         title = str(movie.get("title", ""))
         plot = str(movie.get("plot", ""))
         year = str(movie.get("year", ""))
@@ -153,6 +152,7 @@ class NeuralRetriever:
         ).strip()
 
     def _load_dataset(self) -> List[Dict]:
+        """Loads local dataset and merges web cache documents without URL duplicates."""
         if not os.path.exists(self.dataset_path):
             raise FileNotFoundError(
                 f"No se encontro el dataset en: {self.dataset_path}. "
@@ -184,6 +184,7 @@ class NeuralRetriever:
         return merged_documents
 
     def _build_lexical_index(self) -> None:
+        """Builds an in-memory term -> {doc_idx: tf} lexical inverted index."""
         self.lexical_index = {}
         for doc_idx, movie in enumerate(self.documents):
             text = self._build_text(movie)
@@ -195,6 +196,7 @@ class NeuralRetriever:
         self.doc_count = len(self.documents)
 
     def _compute_lexical_scores(self, query: str) -> np.ndarray:
+        """Computes TF-IDF-like lexical scores with partial-token coverage penalties."""
         if not self.documents:
             return np.array([])
 
@@ -238,6 +240,7 @@ class NeuralRetriever:
         return scores
 
     def _query_lexical_coverage(self, query: str) -> float:
+        """Returns fraction of unique query tokens present in lexical index."""
         tokens = set(indexer.clean_text(query))
         if not tokens:
             return 0.0
@@ -246,6 +249,7 @@ class NeuralRetriever:
         return float(covered) / float(len(tokens))
 
     def _load_web_expander(self) -> WebExpander:
+        """Creates and caches the web expansion helper with project defaults."""
         if self.web_expander is None:
             self.web_expander = WebExpander(
                 cache_path=self.web_cache_path,
@@ -254,6 +258,7 @@ class NeuralRetriever:
         return self.web_expander
 
     def build_vector_db(self, force_rebuild: bool = False) -> None:
+        """Builds or reuses vector index artifacts and refreshes lexical index state."""
         expected_documents = self._load_dataset()
         expected_count = len(expected_documents)
 
@@ -287,6 +292,7 @@ class NeuralRetriever:
         self.load_vector_db()
 
     def load_vector_db(self) -> None:
+        """Loads FAISS index plus metadata and reconstructs aligned document state."""
         if not (os.path.exists(self.vector_index_path) and os.path.exists(self.vector_metadata_path)):
             raise FileNotFoundError(
                 f"No se encontro la BD vectorial en formato index+metadata: {self.vector_index_path} / {self.vector_metadata_path}. "
@@ -333,9 +339,11 @@ class NeuralRetriever:
         self._build_lexical_index()
 
     def ensure_ready(self, force_rebuild: bool = False) -> None:
+        """Guarantees vector and lexical structures are ready for search."""
         self.build_vector_db(force_rebuild=force_rebuild)
 
     def search(self, query: str, top_k: int = 5) -> List[SearchResult]:
+        """Runs pure neural similarity search over FAISS and returns ranked results."""
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
 
@@ -376,6 +384,7 @@ class NeuralRetriever:
         return results
 
     def search_hybrid(self, query: str, top_k: int = 5, alpha: float = 0.7) -> List[SearchResult]:
+        """Combines neural and lexical signals into a single fused ranking score."""
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
 
@@ -426,6 +435,7 @@ class NeuralRetriever:
         return results
 
     def retrieve_candidates(self, query: str, candidate_k: int = 50, alpha: float = 0.9) -> List[SearchResult]:
+        """Retrieves a broad candidate set using hybrid search for later reranking."""
         return self.search_hybrid(query=query, top_k=candidate_k, alpha=alpha)
 
     def rerank_candidates(
@@ -436,6 +446,7 @@ class NeuralRetriever:
         rerank_weight: float = 0.75,
         reranker_model_name: str | None = None,
     ) -> List[SearchResult]:
+        """Reranks candidates with a cross-encoder and blends base and rerank scores."""
         if not candidates:
             return []
 
@@ -501,6 +512,7 @@ class NeuralRetriever:
         rerank_weight: float = 0.75,
         reranker_model_name: str | None = None,
     ) -> List[SearchResult]:
+        """Executes the full retrieval pipeline: candidate retrieval + reranking."""
         candidates = self.retrieve_candidates(query=query, candidate_k=max(candidate_k, top_k), alpha=alpha)
         return self.rerank_candidates(
             query=query,
@@ -519,9 +531,10 @@ class NeuralRetriever:
         rerank_weight: float = 0.75,
         min_local_score: float = 0.72,
         min_lexical_coverage: float = 0.75,
-        hard_min_local_score: float = 0.55,
+        hard_min_local_score: float = 0.65,
         web_max_results: int = 10,
     ) -> List[SearchResult]:
+        """Runs local retrieval and triggers web expansion when confidence is low."""
         local_results = self.search_advanced(
             query=query,
             top_k=top_k,

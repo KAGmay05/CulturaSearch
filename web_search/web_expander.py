@@ -19,17 +19,21 @@ DEFAULT_WEB_CACHE_PATH = "data/web_cache_sensacine.json"
 
 
 class WebExpander:
+    """Discovers and scrapes external SensaCine documents for query expansion."""
+
     def __init__(
         self,
         cache_path: str = DEFAULT_WEB_CACHE_PATH,
         seed_file_paths: List[str] | None = None,
         max_pages_per_seed: int = 2,
     ) -> None:
+        """Configures cache location, seeds and traversal limits for expansion."""
         self.cache_path = cache_path
         self.seed_file_paths = seed_file_paths or list(DEFAULT_SEED_FILE_PATHS)
         self.max_pages_per_seed = max_pages_per_seed
 
     def _load_seed_urls(self) -> List[str]:
+        """Loads valid seed URLs from configured JSON files."""
         urls: List[str] = []
         for seed_file in self.seed_file_paths:
             if not os.path.exists(seed_file):
@@ -53,6 +57,7 @@ class WebExpander:
 
     @staticmethod
     def _build_seed_page_url(seed_url: str, page: int) -> str:
+        """Builds paginated seed URL preserving existing query parameters."""
         parsed = urlparse(seed_url)
         query_params = parse_qs(parsed.query, keep_blank_values=True)
 
@@ -67,6 +72,7 @@ class WebExpander:
 
     @staticmethod
     def _resolve_duckduckgo_result_url(href: str) -> str:
+        """Resolves DuckDuckGo redirect links into final destination URLs."""
         if not href:
             return ""
 
@@ -82,6 +88,7 @@ class WebExpander:
 
     @staticmethod
     def _normalize_sensacine_url(url: str) -> str:
+        """Normalizes SensaCine movie/series URLs into canonical form."""
         if not url:
             return ""
 
@@ -97,6 +104,7 @@ class WebExpander:
         return urlunparse((parsed.scheme or "https", "www.sensacine.com", normalized_path, "", "", ""))
 
     def _discover_from_duckduckgo(self, query: str, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Finds candidate SensaCine URLs by querying DuckDuckGo HTML results."""
         stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
         search_query = f"site:sensacine.com {query.strip()}"
         search_url = f"{DUCKDUCKGO_SEARCH_URL}?{urlencode({'q': search_query})}"
@@ -129,6 +137,7 @@ class WebExpander:
         return discovered_urls, stats
 
     def _discover_from_sensacine_search(self, query: str, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Finds candidate URLs from SensaCine internal search pages."""
         stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
         search_url = f"{SENSACINE_SEARCH_URL}?{urlencode({'q': query.strip()})}"
 
@@ -170,6 +179,7 @@ class WebExpander:
         return discovered_urls, stats
 
     def _discover_from_seed_pages(self, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Traverses seed listing pages when direct search discovery fails."""
         stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
         seed_urls = self._load_seed_urls()
         print(f"Seed URLs cargadas: {len(seed_urls)}")
@@ -227,6 +237,7 @@ class WebExpander:
         return discovered_urls, stats
 
     def _load_cache(self) -> List[Dict]:
+        """Loads cached web documents from disk, returning only valid dict items."""
         if not os.path.exists(self.cache_path):
             return []
 
@@ -239,6 +250,7 @@ class WebExpander:
         return []
 
     def _save_cache(self, new_documents: List[Dict]) -> None:
+        """Merges new web documents into cache keyed by normalized URL."""
         existing_documents = self._load_cache()
         merged_by_url: Dict[str, Dict] = {}
 
@@ -253,6 +265,11 @@ class WebExpander:
             json.dump(list(merged_by_url.values()), f, indent=2, ensure_ascii=False)
 
     def expand(self, query: str, max_results: int = 10) -> List[Dict]:
+        """Expands corpus with scraped web documents relevant to the query.
+
+        Uses a discovery cascade (SensaCine search, DuckDuckGo, seeds), scrapes
+        the resulting pages, persists cache and returns newly obtained docs.
+        """
         if not query or not query.strip():
             return []
 
