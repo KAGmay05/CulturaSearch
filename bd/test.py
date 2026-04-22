@@ -1,52 +1,94 @@
-import pickle
 import os
-from vectorizer import build_embeddings
+import pickle
 
-def verificar_bd_vectorial():
+from vectorizer import (
+    INDEX_PATH,
+    METADATA_PATH,
+    build_embeddings,
+    search_by_similarity,
+)
+
+
+def verificar_vectorizer() -> None:
+    print("--- Verificando flujo completo de vectorizer.py ---")
+
+    # 1) Construcción del índice + metadata
     build_embeddings()
-    ruta_archivo = 'bd/movies_vectors.pkl'
-    
-    print("--- Verificando Base de Datos Vectorial ---")
-    
-    # 1. Verificar si el archivo existe
-    if not os.path.exists(ruta_archivo):
-        print(f"[ERROR] No se encontró el archivo en {ruta_archivo}")
-        return
+    print("[OK] build_embeddings() ejecutado.")
 
-    # 2. Cargar el archivo pkl
+    # 2) Archivos esperados
+    if not os.path.exists(INDEX_PATH):
+        print(f"[ERROR] No se encontró el índice FAISS: {INDEX_PATH}")
+        return
+    if not os.path.exists(METADATA_PATH):
+        print(f"[ERROR] No se encontró metadata: {METADATA_PATH}")
+        return
+    print(f"[OK] Archivos generados: {INDEX_PATH} y {METADATA_PATH}")
+
+    # 3) Validar metadata
     try:
-        with open(ruta_archivo, 'rb') as f:
-            datos = pickle.load(f)
-        print("[OK] Archivo cargado correctamente.")
+        with open(METADATA_PATH, "rb") as f:
+            metadata = pickle.load(f)
     except Exception as e:
-        print(f"[ERROR] No se pudo leer el archivo: {e}")
+        print(f"[ERROR] No se pudo leer metadata.pkl: {e}")
         return
 
-    # 3. Validar contenido
-    urls = datos.get("urls", [])
-    embeddings = datos.get("embeddings", [])
+    if not isinstance(metadata, dict):
+        print("[ERROR] metadata.pkl no tiene formato dict.")
+        return
 
-    print(f"\n--- Estadísticas de la BD Vectorial ---")
-    print(f"Total de URLs indexadas: {len(urls)}")
-    
-    # 4. Validar Dimensiones (Lo más importante para tu informe)
-    # Los embeddings son una matriz de (filas x columnas)
-    # filas = número de películas
-    # columnas = dimensiones del modelo (384 para MiniLM)
-    if len(embeddings) > 0:
-        print(f"Forma de la matriz (Shape): {embeddings.shape}")
-        print(f"Dimensiones por vector: {embeddings.shape[1]}")
-        
-        if embeddings.shape[1] == 384:
-            print("[OK] Las dimensiones coinciden con el modelo MiniLM (384).")
-        
-        # 5. Ver una muestra
-        print(f"\nEjemplo de la primera película:")
-        print(f"URL: {urls[0]}")
-        # Mostramos solo los primeros 5 números del vector para no llenar la pantalla
-        print(f"Primeros 5 valores del vector: {embeddings[0][:5]}")
-    else:
-        print("[ERROR] La matriz de embeddings está vacía.")
+    required_keys = [
+        "urls",
+        "model_name",
+        "index_type",
+        "vector_count",
+        "vector_dim",
+        "dtype",
+        "normalized",
+        "similarity",
+    ]
+    missing = [k for k in required_keys if k not in metadata]
+    if missing:
+        print(f"[ERROR] Faltan claves en metadata: {missing}")
+        return
+
+    urls = metadata.get("urls", [])
+    print("\n--- Estadísticas de metadata ---")
+    print(f"Total URLs: {len(urls)}")
+    print(f"Modelo: {metadata.get('model_name')}")
+    print(f"Índice: {metadata.get('index_type')}")
+    print(f"Vectores: {metadata.get('vector_count')}")
+    print(f"Dimensión: {metadata.get('vector_dim')}")
+    print(f"Tipo: {metadata.get('dtype')}")
+    print(f"Normalizado: {metadata.get('normalized')}")
+    print(f"Similitud: {metadata.get('similarity')}")
+
+    # 4) Probar búsqueda semántica
+    query = "pelicula de accion"
+    top_k = 5
+    try:
+        results = search_by_similarity(query=query, top_k=top_k)
+    except Exception as e:
+        print(f"[ERROR] Falló search_by_similarity(): {e}")
+        return
+
+    print("\n--- Resultados de búsqueda ---")
+    print(f"Consulta: {query}")
+    print(f"Resultados devueltos: {len(results)} (top_k={top_k})")
+
+    if len(results) == 0:
+        print("[ERROR] search_by_similarity() devolvió 0 resultados.")
+        return
+
+    if len(results) > top_k:
+        print("[ERROR] search_by_similarity() devolvió más resultados que top_k.")
+        return
+
+    for item in results[:3]:
+        print(f"#{item['rank']} | score={item['score']:.4f} | url={item['url']}")
+
+    print("\n[OK] vectorizer.py funciona correctamente (indexación + metadata + búsqueda).")
+
 
 if __name__ == "__main__":
-    verificar_bd_vectorial()
+    verificar_vectorizer()
