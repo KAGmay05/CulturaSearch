@@ -1,30 +1,39 @@
 import json
 import os
-from typing import Dict, List
-from urllib.parse import parse_qs, urlencode, quote_plus, urlparse, urlunparse
+import re
+from typing import Dict, List, Tuple
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
-from crawler.fetcher import fetch
+from bs4 import BeautifulSoup
+
+from crawler.fetcher import PLAYWRIGHT_AVAILABLE, fetch
 from crawler.parser import extract_links
 from scraper.scraper import scrape_movie
 
 
-GLOBAL_SEARCH_URL = "https://www.filmaffinity.com/es/globalsearch.php"
-GLOBAL_SEARCH_CX = "008177178803676006601:mrme5orikjy"
-GLOBAL_SEARCH_COF = "FORID:9"
+DUCKDUCKGO_SEARCH_URL = "https://html.duckduckgo.com/html/"
+SENSACINE_BASE_URL = "https://www.sensacine.com"
+SENSACINE_SEARCH_URL = f"{SENSACINE_BASE_URL}/buscar/"
+DEFAULT_SEED_FILE_PATHS = ["seeds/seed_sensacine.json"]
+DEFAULT_WEB_CACHE_PATH = "data/web_cache_sensacine.json"
 
 
 class WebExpander:
+    """Discovers and scrapes external SensaCine documents for query expansion."""
+
     def __init__(
         self,
-        cache_path: str = "data/web_cache.json",
+        cache_path: str = DEFAULT_WEB_CACHE_PATH,
         seed_file_paths: List[str] | None = None,
         max_pages_per_seed: int = 2,
     ) -> None:
+        """Configures cache location, seeds and traversal limits for expansion."""
         self.cache_path = cache_path
-        self.seed_file_paths = seed_file_paths or ["seeds/seed_film_affinity.json"]
+        self.seed_file_paths = seed_file_paths or list(DEFAULT_SEED_FILE_PATHS)
         self.max_pages_per_seed = max_pages_per_seed
 
     def _load_seed_urls(self) -> List[str]:
+        """Loads valid seed URLs from configured JSON files."""
         urls: List[str] = []
         for seed_file in self.seed_file_paths:
             if not os.path.exists(seed_file):
@@ -47,14 +56,11 @@ class WebExpander:
         return urls
 
     @staticmethod
-    def _build_query_url(seed_url: str, query: str, page: int) -> str:
+    def _build_seed_page_url(seed_url: str, page: int) -> str:
+        """Builds paginated seed URL preserving existing query parameters."""
         parsed = urlparse(seed_url)
         query_params = parse_qs(parsed.query, keep_blank_values=True)
 
-        # Always inject/update the user query into the search text parameter.
-        query_params["stext"] = [query.strip()]
-
-        # Keep page canonical to avoid duplicated page parameters.
         if page > 1:
             query_params["page"] = [str(page)]
         else:
@@ -65,15 +71,173 @@ class WebExpander:
         return urlunparse(rebuilt)
 
     @staticmethod
-    def _build_global_search_url(query: str) -> str:
-        encoded_query = quote_plus(query.strip())
-        return (
-            f"{GLOBAL_SEARCH_URL}?cx={GLOBAL_SEARCH_CX}"
-            f"&cof={quote_plus(GLOBAL_SEARCH_COF)}"
-            f"&q={encoded_query}&ie=latin1"
+    def _resolve_duckduckgo_result_url(href: str) -> str:
+        """Resolves DuckDuckGo redirect links into final destination URLs."""
+        if not href:
+            return ""
+
+        if href.startswith("//"):
+            href = f"https:{href}"
+
+        parsed = urlparse(href)
+        if "duckduckgo.com" in parsed.netloc and parsed.path.startswith("/l/"):
+            redirect_url = parse_qs(parsed.query).get("uddg", [""])[0]
+            return redirect_url
+
+        return href
+
+    @staticmethod
+    def _normalize_sensacine_url(url: str) -> str:
+        """Normalizes SensaCine movie/series URLs into canonical form."""
+        if not url:
+            return ""
+
+        parsed = urlparse(url)
+        if "sensacine.com" not in parsed.netloc:
+            return ""
+
+        match = re.search(r"^(/peliculas/pelicula-\d+|/series/serie-\d+)", parsed.path)
+        if not match:
+            return ""
+
+        normalized_path = match.group(1).rstrip("/") + "/"
+        return urlunparse((parsed.scheme or "https", "www.sensacine.com", normalized_path, "", "", ""))
+
+    def _discover_from_duckduckgo(self, query: str, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Finds candidate SensaCine URLs by querying DuckDuckGo HTML results."""
+        stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
+        search_query = f"site:sensacine.com {query.strip()}"
+        search_url = f"{DUCKDUCKGO_SEARCH_URL}?{urlencode({'q': search_query})}"
+
+        print(f"\n[DDG] Intentando descubrir URLs con: {search_url}")
+        stats["pages_checked"] += 1
+        html = fetch(search_url)
+        print(f"[DDG] HTML recibido: {len(html) if html else 0} bytes")
+        if not html:
+            stats["fetch_failed"] += 1
+            return [], stats
+
+        stats["fetch_ok"] += 1
+        soup = BeautifulSoup(html, "html.parser")
+        discovered_urls: List[str] = []
+        seen_urls = set()
+
+        for anchor in soup.select("a[data-testid='result-title-a'], a.result__a"):
+            resolved_url = self._resolve_duckduckgo_result_url(anchor.get("href", ""))
+            normalized_url = self._normalize_sensacine_url(resolved_url)
+            if not normalized_url or normalized_url in seen_urls:
+                continue
+
+            discovered_urls.append(normalized_url)
+            seen_urls.add(normalized_url)
+            if len(discovered_urls) >= max_results:
+                break
+
+        print(f"[DDG] URLs relevantes encontradas: {len(discovered_urls)}")
+        return discovered_urls, stats
+
+    def _discover_from_sensacine_search(self, query: str, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Finds candidate URLs from SensaCine internal search pages."""
+        stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
+        search_url = f"{SENSACINE_SEARCH_URL}?{urlencode({'q': query.strip()})}"
+
+        print(f"\n[SENSACINE SEARCH] Buscando en: {search_url}")
+        stats["pages_checked"] += 1
+        html = fetch(search_url)
+        print(f"[SENSACINE SEARCH] HTML recibido: {len(html) if html else 0} bytes")
+        if not html:
+            stats["fetch_failed"] += 1
+            return [], stats
+
+        stats["fetch_ok"] += 1
+        movie_links, series_links = extract_links(html, search_url)
+
+        # Si requests devolvio HTML pero no enlaces utiles, forzar un reintento
+        # con navegador real (Playwright) para sortear consent-wall/anti-bot.
+        if not movie_links and not series_links and PLAYWRIGHT_AVAILABLE:
+            print("[SENSACINE SEARCH] Sin enlaces utiles, reintentando con Playwright...")
+            html = fetch(search_url, force_playwright=True)
+            print(f"[SENSACINE SEARCH] HTML tras fallback browser: {len(html) if html else 0} bytes")
+            if html:
+                movie_links, series_links = extract_links(html, search_url)
+
+        candidates = list(movie_links) + list(series_links)
+        discovered_urls: List[str] = []
+        seen_urls = set()
+
+        for candidate_url in candidates:
+            normalized_url = self._normalize_sensacine_url(candidate_url)
+            if not normalized_url or normalized_url in seen_urls:
+                continue
+
+            seen_urls.add(normalized_url)
+            discovered_urls.append(normalized_url)
+            if len(discovered_urls) >= max_results:
+                break
+
+        print(f"[SENSACINE SEARCH] URLs relevantes encontradas: {len(discovered_urls)}")
+        return discovered_urls, stats
+
+    def _discover_from_seed_pages(self, max_results: int) -> Tuple[List[str], Dict[str, int]]:
+        """Traverses seed listing pages when direct search discovery fails."""
+        stats = {"pages_checked": 0, "fetch_ok": 0, "fetch_failed": 0}
+        seed_urls = self._load_seed_urls()
+        print(f"Seed URLs cargadas: {len(seed_urls)}")
+
+        if not seed_urls:
+            seed_urls = [
+                f"{SENSACINE_BASE_URL}/peliculas/",
+                f"{SENSACINE_BASE_URL}/peliculas/estrenos/es/",
+                f"{SENSACINE_BASE_URL}/series/",
+            ]
+            print("[WARNING] No se encontraron seeds, usando seeds de SensaCine por defecto")
+
+        discovered_urls: List[str] = []
+        seen_urls = set()
+
+        for seed_url in seed_urls:
+            for page in range(1, self.max_pages_per_seed + 1):
+                page_url = self._build_seed_page_url(seed_url, page)
+                print(f"\n[SEED SEARCH] Intentando página {page}: {page_url}")
+                stats["pages_checked"] += 1
+
+                html = fetch(page_url)
+                print(f"[SEED SEARCH] HTML recibido: {len(html) if html else 0} bytes")
+                if not html:
+                    stats["fetch_failed"] += 1
+                    continue
+
+                stats["fetch_ok"] += 1
+                movie_links, series_links = extract_links(html, page_url)
+                page_links = list(movie_links) + list(series_links)
+                print(f"[SEED SEARCH] Links encontrados en página {page}: {len(page_links)}")
+
+                for candidate_url in page_links:
+                    normalized_url = self._normalize_sensacine_url(candidate_url)
+                    if not normalized_url or normalized_url in seen_urls:
+                        continue
+
+                    seen_urls.add(normalized_url)
+                    discovered_urls.append(normalized_url)
+
+                    if len(discovered_urls) >= max_results:
+                        break
+
+                if len(discovered_urls) >= max_results:
+                    break
+
+            if len(discovered_urls) >= max_results:
+                break
+
+        print(
+            "Diagnostico seeds -> "
+            f"paginas={stats['pages_checked']}, fetch_ok={stats['fetch_ok']}, fetch_failed={stats['fetch_failed']}, "
+            f"links_descubiertos={len(discovered_urls)}"
         )
+        return discovered_urls, stats
 
     def _load_cache(self) -> List[Dict]:
+        """Loads cached web documents from disk, returning only valid dict items."""
         if not os.path.exists(self.cache_path):
             return []
 
@@ -86,6 +250,7 @@ class WebExpander:
         return []
 
     def _save_cache(self, new_documents: List[Dict]) -> None:
+        """Merges new web documents into cache keyed by normalized URL."""
         existing_documents = self._load_cache()
         merged_by_url: Dict[str, Dict] = {}
 
@@ -100,67 +265,59 @@ class WebExpander:
             json.dump(list(merged_by_url.values()), f, indent=2, ensure_ascii=False)
 
     def expand(self, query: str, max_results: int = 10) -> List[Dict]:
+        """Expands corpus with scraped web documents relevant to the query.
+
+        Uses a discovery cascade (SensaCine search, DuckDuckGo, seeds), scrapes
+        the resulting pages, persists cache and returns newly obtained docs.
+        """
         if not query or not query.strip():
             return []
 
         print(f"\n========== WEB EXPANSION START ==========")
         print(f"Query: '{query}'")
         print(f"Max results: {max_results}")
-        
-        seed_urls = self._load_seed_urls()
-        print(f"Seed URLs cargadas: {len(seed_urls)}")
-        if not seed_urls:
-            seed_urls = ["https://www.filmaffinity.com/es/advsearch.php?stext=&stype%5B%5D=title&genre%5B%5D=&country=&fromyear=&toyear=&ratingcount=1&runtimemin=0&runtimemax="]
-            print(f"[WARNING] No seed URLs encontradas, usando seed por defecto")
 
         discovered_urls: List[str] = []
         seen_urls = set()
+        pages_checked = 0
         fetch_ok = 0
         fetch_failed = 0
-        pages_checked = 0
 
-        for seed_url in seed_urls:
-            for page in range(1, self.max_pages_per_seed + 1):
-                search_url = self._build_query_url(seed_url, query, page)
-                print(f"\n[SEED SEARCH] Intentando página {page}: {search_url}")
-                pages_checked += 1
-                html = fetch(search_url)
-                print(f"[SEED SEARCH] HTML recibido: {len(html) if html else 0} bytes")
-                if not html:
-                    fetch_failed += 1
-                    continue
-                fetch_ok += 1
+        search_urls, search_stats = self._discover_from_sensacine_search(query, max_results)
+        pages_checked += search_stats["pages_checked"]
+        fetch_ok += search_stats["fetch_ok"]
+        fetch_failed += search_stats["fetch_failed"]
 
-                movie_links, _ = extract_links(html, search_url)
-                print(f"[SEED SEARCH] Links encontrados en página {page}: {len(movie_links)}")
-                for movie_url in movie_links:
-                    if movie_url not in seen_urls:
-                        seen_urls.add(movie_url)
-                        discovered_urls.append(movie_url)
+        for candidate_url in search_urls:
+            if candidate_url not in seen_urls:
+                seen_urls.add(candidate_url)
+                discovered_urls.append(candidate_url)
 
-                if len(discovered_urls) >= max_results:
-                    break
+        if len(discovered_urls) < max_results:
+            ddg_urls, ddg_stats = self._discover_from_duckduckgo(query, max_results - len(discovered_urls))
+            pages_checked += ddg_stats["pages_checked"]
+            fetch_ok += ddg_stats["fetch_ok"]
+            fetch_failed += ddg_stats["fetch_failed"]
 
-            if len(discovered_urls) >= max_results:
-                break
+            for candidate_url in ddg_urls:
+                if candidate_url not in seen_urls:
+                    seen_urls.add(candidate_url)
+                    discovered_urls.append(candidate_url)
 
-        global_search_url = self._build_global_search_url(query)
-        print(f"\n[GLOBAL SEARCH] Intentando buscar en: {global_search_url}")
-        pages_checked += 1
-        html = fetch(global_search_url)
-        print(f"[GLOBAL SEARCH] HTML recibido: {len(html) if html else 0} bytes")
-        if html:
-            print(f"[GLOBAL SEARCH] Primeros 300 caracteres: {html[:300]}")
-            fetch_ok += 1
-            movie_links, _ = extract_links(html, global_search_url)
-            print(f"[GLOBAL SEARCH] Links encontrados: {len(movie_links)}")
-            for movie_url in movie_links:
-                if movie_url not in seen_urls:
-                    seen_urls.add(movie_url)
-                    discovered_urls.append(movie_url)
-        else:
-            print("[GLOBAL SEARCH] ERROR: No se pudo obtener HTML (posible bloqueo de bot)")
-            fetch_failed += 1
+        # Seeds como ultimo recurso real: solo si no se encontro nada
+        # con la busqueda directa de SensaCine ni con DDG.
+        if not discovered_urls:
+            seed_urls, seed_stats = self._discover_from_seed_pages(max_results)
+            pages_checked += seed_stats["pages_checked"]
+            fetch_ok += seed_stats["fetch_ok"]
+            fetch_failed += seed_stats["fetch_failed"]
+
+            for candidate_url in seed_urls:
+                if candidate_url not in seen_urls:
+                    seen_urls.add(candidate_url)
+                    discovered_urls.append(candidate_url)
+        elif len(discovered_urls) < max_results:
+            print("[SEED SEARCH] Omitido: solo se usa como ultimo recurso")
 
         print(
             "Diagnostico web -> "
@@ -182,11 +339,12 @@ class WebExpander:
                 continue
             scrape_ok += 1
 
-            url = str(movie.get("url", movie_url))
+            url = self._normalize_sensacine_url(str(movie.get("url", movie_url))) or movie_url
             if not url or url in seen_doc_urls:
                 continue
 
             print(f"[SCRAPING] OK: {movie.get('title', 'Sin título')}")
+            movie["url"] = url
             movie["source"] = "web"
             movie["source_query"] = query
             movie["source_url"] = movie_url
