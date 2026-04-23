@@ -15,7 +15,8 @@ from web_search.web_expander import WebExpander
 
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
-DEFAULT_RERANKER_MODEL_NAME = "cross-encoder/mmarco-mMiniLMv2-L12-H384-v1"
+# Modelo de re-ranking pequeño (~500MB, no 14.5GB)
+DEFAULT_RERANKER_MODEL_NAME = "ms-marco-MiniLM-L-6-v2"
 DEFAULT_DATASET_PATH = "data/movies.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
