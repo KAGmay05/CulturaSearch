@@ -1,5 +1,6 @@
 import random
 import time
+from urllib.parse import urlparse
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -117,12 +118,47 @@ def _fetch_with_playwright(url):
     try:
         print(f"[INFO] Usando Playwright para: {url[:80]}...")
         with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+            browser = None
+            launch_errors = []
+
+            for channel in ("msedge", "chrome"):
+                try:
+                    browser = p.chromium.launch(channel=channel, headless=True)
+                    print(f"[INFO] Playwright lanzado con canal del sistema: {channel}")
+                    break
+                except Exception as e:
+                    launch_errors.append(f"{channel}:{type(e).__name__}")
+
+            if browser is None:
+                try:
+                    browser = p.chromium.launch(headless=True)
+                    print("[INFO] Playwright lanzado con Chromium gestionado")
+                except Exception as e:
+                    launch_errors.append(f"managed:{type(e).__name__}")
+                    print(f"[ERROR] No se pudo lanzar Playwright ({', '.join(launch_errors)})")
+                    return None
+
             page = browser.new_page()
             page.set_extra_http_headers(HEADERS)
             
             try:
                 page.goto(url, timeout=30000, wait_until="domcontentloaded")
+
+                cookie_selectors = [
+                    "#didomi-notice-agree-button",
+                    "button:has-text('Aceptar y leer GRATIS')",
+                    "button:has-text('Aceptar')",
+                    "button:has-text('Accept')",
+                ]
+                for selector in cookie_selectors:
+                    try:
+                        button = page.locator(selector).first
+                        if button.is_visible(timeout=1200):
+                            button.click(timeout=1500)
+                            break
+                    except Exception:
+                        continue
+
                 time.sleep(2)
                 html = page.content()
                 
@@ -148,7 +184,7 @@ def _fetch_with_playwright(url):
         return None
 
 
-def fetch(url):
+def fetch(url, force_playwright=False):
     """
     Fetch inteligente con fallback requests→Playwright.
     
@@ -157,8 +193,28 @@ def fetch(url):
     3. Retorna HTML o None
     """
     
+    if force_playwright:
+        if PLAYWRIGHT_AVAILABLE:
+            print("[INFO] Fetch forzado con Playwright...")
+            return _fetch_with_playwright(url)
+        print("[WARN] force_playwright=True pero Playwright no está disponible")
+        return None
+
     html = _fetch_with_requests(url, retries=3)
     if html:
+        parsed_url = urlparse(url)
+        is_sensacine_search = (
+            "sensacine.com" in parsed_url.netloc and parsed_url.path.startswith("/buscar/")
+        )
+        has_expected_results = (
+            "/peliculas/pelicula-" in html or "/series/serie-" in html
+        )
+        if is_sensacine_search and not has_expected_results and PLAYWRIGHT_AVAILABLE:
+            print("[INFO] Search HTML sin resultados detectados, fallback forzado a Playwright...")
+            browser_html = _fetch_with_playwright(url)
+            if browser_html:
+                return browser_html
+
         return html
 
     # Fallback a Playwright si está disponible

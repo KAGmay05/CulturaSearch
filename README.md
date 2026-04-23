@@ -4,7 +4,7 @@ Proyecto de recuperacion de informacion en el dominio de cultura y entretenimien
 
 ## Modelo no basico (Red neuronal)
 
-Para el primer corte se incluyo un recuperador neuronal en `non_basic_model/` basado en embeddings densos con `sentence-transformers`.
+Para el primer corte se incluyo un recuperador neuronal en `neural_based_model/` basado en embeddings densos con `sentence-transformers`.
 
 ### Dependencias
 
@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ### Ejecutar demo de busqueda semantica
 
 ```bash
-python -m non_basic_model.demo
+python demo.py
 ```
 
 Este flujo realiza:
@@ -35,7 +35,7 @@ Este flujo realiza:
 ### Uso programatico
 
 ```python
-from non_basic_model.neural_retriever import NeuralRetriever
+from neural_based_model.neural_retriever import NeuralRetriever
 
 retriever = NeuralRetriever()
 retriever.ensure_ready(force_rebuild=False)
