@@ -1,38 +1,106 @@
 # CulturaSearch
 
-Proyecto de recuperacion de informacion en el dominio de cultura y entretenimiento.
+Proyecto de recuperación de información en el dominio de cultura y entretenimiento.
 
-## Modelo no basico (Red neuronal)
+## Instalación
 
-Para el primer corte se incluyo un recuperador neuronal en `neural_based_model/` basado en embeddings densos con `sentence-transformers`.
-
-### Dependencias
-
-Instala estas librerias en tu entorno de Python:
-
-```bash
-pip install sentence-transformers scikit-learn numpy
-```
-
-O instala todo desde el archivo del proyecto:
+Instala las dependencias necesarias:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### Ejecutar demo de busqueda semantica
+## Estructura del Proyecto
 
-```bash
-python demo.py
+El proyecto está dividido en módulos independientes pero integrados:
+
+- **`crawler/`** - Descubridor de URLs desde SensaCine
+- **`scraper/`** - Extractor de datos de URLs
+- **`neural_based_model/`** - Recuperador neuronal con búsqueda semántica
+- **`rag_module/`** - Pipeline RAG con generación LLM
+- **`web_search/`** - Expansión web bajo demanda
+
+## Integración: RAG + Módulo Web
+
+El módulo RAG y el módulo web están **completamente integrados** en un único flujo:
+
+1. Cuando haces una consulta en RAG, el sistema busca localmente.
+2. Si la confianza local es baja, **automáticamente** activa la expansión web (`WebExpander`).
+3. Los documentos web se scrapean, se re-indexan y se rankean junto con los locales.
+4. La respuesta final usa los mejores documentos, sin importar si vinieron del corpus local o de la web.
+
+ El RAG siempre usa `NeuralRetriever.search_with_web_expansion()`, que decide internamente cuándo buscar en la web.
+
+### Configuración de Web Expansion
+
+Edita `neural_based_model/neural_retriever.py` si quieres ajustar los umbrales:
+
+```python
+def search_with_web_expansion(
+    self,
+    query: str,
+    top_k: int = 5,
+    min_local_score: float = 0.72,          # Umbral de confianza
+    min_lexical_coverage: float = 0.75,     # Cobertura de términos
+    hard_min_local_score: float = 0.65,     # Mínimo absoluto
+    web_max_results: int = 10,              # Máx docs web a scrapear
+):
 ```
 
-Este flujo realiza:
+## Ejecución del Proyecto
 
-1. Carga del modelo `paraphrase-multilingual-MiniLM-L12-v2`.
-2. Construccion/carga de la base vectorial inicial en `bd/movies_vectors.pkl`.
-3. Ranking de resultados por similitud coseno para consultas en lenguaje natural.
+### Flujo Completo (Recomendado)
 
-### Uso programatico
+Para ejecutar todo el pipeline (crawler → scraper → RAG interactivo):
+
+```bash
+python main.py
+```
+
+O explícitamente:
+
+```bash
+python main.py full
+```
+
+### Ejecutar Componentes Individuales
+
+**Crawler** (descubre URLs de películas y series):
+```bash
+python -m crawler.run_crawler
+```
+
+**Scraper** (descarga datos de las URLs descubiertas):
+```bash
+python -m scraper.run_scraper
+```
+
+**Recuperador Neuronal Demo** (diagnóstico de búsqueda semántica):
+```bash
+python run_retrieval_demo.py
+```
+
+**RAG Interactivo** (búsqueda + generación con LLM):
+```bash
+python -m rag_module.run_rag
+```
+
+### Desde el Lanzador General
+
+Si prefieres usar `main.py` para cada subsistema:
+
+```bash
+python main.py crawl    # Solo crawler
+python main.py scrape   # Solo scraper
+python main.py rag      # Solo RAG
+python main.py full     # Todo (default)
+```
+
+## Módulo Neural (Red Neuronal)
+
+El recuperador neuronal usa embeddings densos con `sentence-transformers`.
+
+### Uso Programático
 
 ```python
 from neural_based_model.neural_retriever import NeuralRetriever
@@ -42,128 +110,70 @@ retriever.ensure_ready(force_rebuild=False)
 results = retriever.search("serie policial con detectives", top_k=5)
 
 for item in results:
-	print(item.rank, item.score, item.title, item.url)
+    print(item.rank, item.score, item.title, item.url)
+```
+
+### Búsqueda con Expansión Web
+
+Para activar expansión web automática si la confianza local es baja:
+
+```python
+results = retriever.search_with_web_expansion("tu consulta", top_k=5)
 ```
 
 ## Módulo RAG (Retrieval-Augmented Generation)
 
-El módulo RAG integra búsqueda semántica con generación de lenguaje para proporcionar respuestas enriquecidas y contextualmente relevantes.
-
-### ¿Qué es RAG?
-
-RAG combina:
-1. **Retrieval**: Recuperar documentos relevantes del corpus
-2. **Generation**: Generar respuestas basadas en el contexto recuperado
+El módulo RAG integra **búsqueda semántica + expansión web + generación LLM** en un único pipeline.
 
 ### Características
 
-- ✅ Integración transparente con NeuralRetriever existente
-- ✅ Soporte para múltiples backends LLM (Ollama, OpenAI, HuggingFace)
-- ✅ Re-ranking de resultados para mayor precisión
-- ✅ Prompts personalizables
-- ✅ Batch processing de consultas
-- ✅ Exportación de resultados a JSON
+- ✅ **Recuperación unificada**: búsqueda local + expansión web automática
+- ✅ **Generación con Ollama**: respuestas en lenguaje natural
+- ✅ **Re-ranking de resultados**: mejor precisión
+- ✅ **Loop interactivo**: preguntas y respuestas por consola
+- ✅ **Prompts en español**: respuestas contextualizadas
 
-### Instalación Rápida
+### Configuración
 
+Edita `rag_module/config.py`:
+
+```python
+@dataclass
+class RAGConfig:
+    model_name: str = "neural-chat"    # Modelo Ollama local
+    top_k: int = 4                     # Documentos a recuperar
+    max_tokens: int = 512              # Máximo de tokens en respuesta
+    temperature: float = 0.7           # Creatividad (0=determinístico, 1=creativo)
+```
+
+### Requisitos Previos
+
+1. **Ollama** descargado e instalado, corriendo con:
 ```bash
-# 1. Instalar dependencias
-pip install -r requirements.txt
-
-# 2. Configurar backend LLM (Ollama recomendado)
-# Opción A: Ollama (local)
-ollama pull mistral
 ollama serve
-
-# Opción B: OpenAI
-export OPENAI_API_KEY=sk-...
-
-# 3. Usar el pipeline RAG
-python rag_demo.py --interactive
 ```
 
-### Uso Básico
-
-```python
-from rag_module import RAGConfig, RAGPipeline, LLMBackend
-
-# Crear configuración
-config = RAGConfig(
-    llm_backend=LLMBackend.OLLAMA,
-    model_name="mistral",
-    retriever_top_k=5
-)
-
-# Inicializar pipeline
-rag = RAGPipeline(config)
-rag.initialize()
-
-# Realizar consulta
-result = rag.query("¿Qué películas de acción puedo ver?")
-
-# Mostrar resultado
-rag.print_result(result)
+2. **Dataset local** generado primero:
+```bash
+python main.py crawl
+python main.py scrape
 ```
 
-### Ejemplos
+3. **Índice neural** construido:
+```bash
+python run_retrieval_demo.py
+```
+
+### Ejecutar RAG Interactivo
 
 ```bash
-# Modo interactivo
-python rag_demo.py --interactive
-
-# Ejecutar ejemplos específicos
-python rag_demo.py --example 1  # RAG básico
-python rag_demo.py --example 2  # Con re-ranking
-python rag_demo.py --example 3  # Batch processing
-python rag_demo.py --example 4  # OpenAI API
-python rag_demo.py --example 5  # Prompts personalizados
-python rag_demo.py --example 6  # Verificar backends
+python -m rag_module.run_rag
 ```
 
-### Uso Programático Avanzado
-
-```python
-from rag_module import RAGConfig, RAGPipeline, LLMBackend
-
-# Consulta con re-ranking
-result = rag.query_with_reranking(
-    "Tu pregunta aquí",
-    initial_top_k=20,
-    final_top_k=5
-)
-
-# Batch de consultas
-questions = [
-    "¿Qué películas de acción hay?",
-    "¿Mejores series de drama?"
-]
-results = rag.batch_query(questions)
-rag.export_results(results, "resultados.json")
+Luego escribe preguntas sobre películas y series:
+```
+🔍 Pregunta: ¿Qué películas de acción hay?
+💡 RESPUESTA: [respuesta generada con RAG + web]
 ```
 
-### Arquitectura del Módulo RAG
-
-```
-rag_module/
-├── config.py       # Configuración centralizada
-├── generator.py    # Generadores LLM (Ollama, OpenAI, HF)
-├── pipeline.py     # Pipeline RAG completo
-└── utils.py        # Funciones de utilidad
-└── demo.py         # Ejemplos de uso
-
-
-### Parámetros Configurables
-
-| Parámetro | Rango | Descripción |
-|-----------|-------|-------------|
-| `retriever_top_k` | 1-20 | Documentos a recuperar |
-| `temperature` | 0.0-1.0 | Creatividad de respuesta (0=determinístico, 1=creativo) |
-| `max_tokens` | 100-2000 | Longitud máxima de respuesta |
-| `reranker_enabled` | True/False | Usar re-ranking CrossEncoder |
-
-
-### Documentación Completa
-
-- Consulta [RAG_SETUP.py](RAG_SETUP.py) para guía de instalación detallada
-- Consulta [RAG_REFERENCE.py](RAG_REFERENCE.py) para referencia rápida
-- Ver ejemplos en [rag_demo.py](rag_demo.py)
+El sistema automáticamente decidirá si buscar solo localmente o expandir con documentos web.

@@ -5,7 +5,7 @@ from collections import Counter
 
 # Cargar el corpus actual
 
-with open('data/movies.json', 'r', encoding='utf-8') as f:
+with open('data/dataset.json', 'r', encoding='utf-8') as f:
     data = json.load(f)
 df = pd.DataFrame(data)
 

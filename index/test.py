@@ -4,7 +4,7 @@ from indexer import build_index, clean_text
 
 def test_indexing():
     print("--- Iniciando Pruebas del Módulo de Indexación ---")
-    dataset_path = 'data/movies.json'
+    dataset_path = 'data/dataset.json'
     
     if not os.path.exists(dataset_path):
         print(f"Error: No se encuentra el archivo {dataset_path}")

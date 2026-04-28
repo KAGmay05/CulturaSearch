@@ -44,19 +44,16 @@ PREGUNTA: {query}
 Recomienda las opciones más relevantes, explica brevemente por qué cada una encaja con la pregunta y sé específico."""
 
     def query(self, question):
-        # 1. Retrieval
-        docs = self.retriever.search(question, self.top_k)
+       docs = self.retriever.search_with_web_expansion(question, top_k=self.top_k)
 
-        if not docs:
-            return "No encontré resultados."
+       if not docs:
+         return "No encontré resultados."
 
-        # 2. Contexto
-        context = self.build_context(docs)
-
-        # 3. Prompt
-        prompt = self.build_prompt(question, context)
-
-        # 4. Generación
-        response = self.generator.generate(prompt, temperature=self.temperature, max_tokens=self.max_tokens)
-
-        return response
+       context = self.build_context(docs)
+       prompt = self.build_prompt(question, context)
+       response = self.generator.generate(
+           prompt,
+           temperature=self.temperature,
+           max_tokens=self.max_tokens,
+        )
+       return response   

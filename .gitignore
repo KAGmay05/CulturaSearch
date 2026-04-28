@@ -1,10 +1,6 @@
 __pycache__/
 *.py[cod]
 
-data/
-movies_test.json
-movies_urls_test.json
-
 debug_creator.py
 debug_director.py
 debug_director2.py
@@ -27,3 +23,9 @@ test_scraper.py
 test_serie.py
 verify_final.py
 verify_scraper.py
+
+bd/movies_vectors.index
+bd/metadata.pkl
+bd/movies_vectors.pkl
+bd/*.index
+bd/*.pkl

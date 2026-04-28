@@ -17,7 +17,7 @@ from web_search.web_expander import WebExpander
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 # Modelo de re-ranking pequeño (~500MB, no 14.5GB)
 DEFAULT_RERANKER_MODEL_NAME = "ms-marco-MiniLM-L-6-v2"
-DEFAULT_DATASET_PATH = "data/movies.json"
+DEFAULT_DATASET_PATH = "data/dataset.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
 DEFAULT_VECTOR_METADATA_PATH = "bd/metadata.pkl"
@@ -157,14 +157,14 @@ class NeuralRetriever:
         if not os.path.exists(self.dataset_path):
             raise FileNotFoundError(
                 f"No se encontro el dataset en: {self.dataset_path}. "
-                "Primero ejecuta tu scraper para generar data/movies.json."
+                "Primero ejecuta tu scraper para generar data/dataset.json."
             )
 
         with open(self.dataset_path, "r", encoding="utf-8") as f:
             dataset = json.load(f)
 
         if not isinstance(dataset, list) or not dataset:
-            raise ValueError("El archivo data/movies.json esta vacio o no tiene el formato esperado.")
+            raise ValueError("El archivo data/dataset.json esta vacio o no tiene el formato esperado.")
 
         merged_documents = list(dataset)
         seen_urls = {str(doc.get("url", "")) for doc in merged_documents if doc.get("url")}

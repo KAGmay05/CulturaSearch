@@ -43,7 +43,7 @@ def build_embeddings(
     model_name=MODEL_NAME,
     index_path=INDEX_PATH,
     metadata_path=METADATA_PATH,
-    dataset_path='data/movies.json',
+    dataset_path='data/dataset.json',
     include_documents=False,
     text_builder: Callable | None = None,
     model: SentenceTransformer | None = None,

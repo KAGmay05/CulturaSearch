@@ -2,7 +2,7 @@ import json
 from index import indexer
 
 # Cargar el dataset
-with open("data/movies.json", "r", encoding="utf-8") as f:
+with open("data/dataset.json", "r", encoding="utf-8") as f:
     movies = json.load(f)
 
 # Buscar "(500) días juntos"
