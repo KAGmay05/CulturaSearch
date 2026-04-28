@@ -1,6 +1,34 @@
 from bs4 import BeautifulSoup
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, urlunparse
 import re
+
+
+SENSACINE_BASE_URL = "https://www.sensacine.com"
+
+
+def _normalize_sensacine_url(href):
+    if not href:
+        return None
+
+    href = href.strip()
+    if not href or href.startswith(("javascript:", "mailto:", "#")):
+        return None
+
+    if href.startswith("//"):
+        href = f"https:{href}"
+    elif href.startswith("/"):
+        href = urljoin(SENSACINE_BASE_URL, href)
+
+    parsed = urlparse(href)
+    if "sensacine.com" not in parsed.netloc:
+        return None
+
+    match = re.search(r"^(/peliculas/pelicula-\d+|/series/serie-\d+)", parsed.path)
+    if not match:
+        return None
+
+    normalized_path = match.group(1).rstrip("/") + "/"
+    return urlunparse((parsed.scheme or "https", "www.sensacine.com", normalized_path, "", "", ""))
 
 
 def _extract_filmaffinity_links(html, current_url):
@@ -25,22 +53,15 @@ def _extract_sensacine_links(html, current_url):
     
     for tag in soup.find_all("a", href=True):
         href = tag["href"]
-        
-        # SensaCine películas: /peliculas/pelicula-12345 o /peliculas/pelicula-12345/
-        if re.search(r'/peliculas/pelicula-\d+/?', href):
-            if not href.startswith(('//', 'http')):
-                full_url = urljoin("https://www.sensacine.com", href)
-            else:
-                full_url = href
-            movie_links.add(full_url)
-        
-        # SensaCine series: /series/serie-12345 o /series/serie-12345/
-        elif re.search(r'/series/serie-\d+/?', href):
-            if not href.startswith(('//', 'http')):
-                full_url = urljoin("https://www.sensacine.com", href)
-            else:
-                full_url = href
-            series_links.add(full_url)
+
+        normalized_url = _normalize_sensacine_url(href)
+        if not normalized_url:
+            continue
+
+        if "/peliculas/pelicula-" in normalized_url:
+            movie_links.add(normalized_url)
+        elif "/series/serie-" in normalized_url:
+            series_links.add(normalized_url)
     
     return movie_links, series_links
 

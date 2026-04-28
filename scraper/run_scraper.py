@@ -1,38 +1,38 @@
 import json
-from scraper import scrape_movie
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-MAX_WORKERS = 5 
+from scraper.scraper import scrape_movie
 
-# Leer URLs de películas y series
-with open("data/movie_urls.json", "r") as f:
-    movie_urls = json.load(f)
+MAX_WORKERS = 5
 
-with open("data/series_urls.json", "r") as f:
-    series_urls = json.load(f)
 
-# Combinar ambas listas
-urls = movie_urls + series_urls
+def main():
+    with open("data/movie_urls.json", "r", encoding="utf-8") as f:
+        movie_urls = json.load(f)
 
-movies = []
+    with open("data/series_urls.json", "r", encoding="utf-8") as f:
+        series_urls = json.load(f)
 
-with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    urls = movie_urls + series_urls
+    movies = []
 
-    futures = {executor.submit(scrape_movie, url): url for url in urls}
+    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+        futures = {executor.submit(scrape_movie, url): url for url in urls}
 
-    for i, future in enumerate(as_completed(futures)):
+        for i, future in enumerate(as_completed(futures)):
+            url = futures[future]
+            print(f"[INFO] Scraping {i + 1}/{len(urls)}")
 
-        url = futures[future]
+            try:
+                movie = future.result()
+                if movie:
+                    movies.append(movie)
+            except Exception as e:
+                print(f"[ERROR] {url} -> {e}")
 
-        print(f"[INFO] Scraping {i+1}/{len(urls)}")
+    with open("data/dataset.json", "w", encoding="utf-8") as f:
+        json.dump(movies, f, indent=2, ensure_ascii=False)
 
-        try:
-            movie = future.result()
-            if movie:  # Solo agregar si no es None (filtra críticas)
-                movies.append(movie)
 
-        except Exception as e:
-            print(f"[ERROR] {url} -> {e}")
-
-with open("data/movies.json", "w", encoding="utf-8") as f:
-    json.dump(movies, f, indent=2, ensure_ascii=False)
+if __name__ == "__main__":
+    main()
