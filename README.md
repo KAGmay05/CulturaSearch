@@ -85,6 +85,18 @@ python run_retrieval_demo.py
 python -m rag_module.run_rag
 ```
 
+**Interfaz Visual** (búsqueda en lenguaje natural con ranking visual):
+```bash
+streamlit run app.py
+```
+
+También puedes abrirla desde el lanzador general:
+```bash
+python main.py ui
+```
+
+La interfaz está pensada para mostrar los resultados en tarjetas rankeadas, con métricas de relevancia, tipo de contenido y una presentación más limpia para navegar mejor los hallazgos.
+
 ### Desde el Lanzador General
 
 Si prefieres usar `main.py` para cada subsistema:

@@ -20,7 +20,7 @@
     "country": "EE.UU.,\n                                    \n                     Italia",
     "year": "1976",
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1678/"
   },
   {
@@ -44,7 +44,7 @@
     "year": "2026",
     "rating": null,
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000022003/"
   },
   {
@@ -68,7 +68,7 @@
     "country": "EE.UU.",
     "year": "2026",
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000008742/"
   },
   {
@@ -116,7 +116,7 @@
     "country": "EE.UU.,\n                                    \n                     Alemania",
     "year": "2009",
     "source": "web",
-    "source_query": "recomiendame una novela turca de amor",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-60208/"
   },
   {
@@ -141,7 +141,7 @@
       "Melissa Villaseñor"
     ],
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000009065/"
   },
   {
@@ -219,7 +219,7 @@
       "Charlie Day"
     ],
     "source": "web",
-    "source_query": "recomiendame una novela turca de amor",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-327878/"
   },
   {
@@ -265,12 +265,12 @@
       "Colman Domingo",
       "Nia Long"
     ],
-    "rating": "4,2",
+    "rating": "4,1",
     "type": "pelicula",
     "country": "EE.UU.",
     "year": "2026",
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-279306/"
   },
   {
@@ -345,7 +345,267 @@
     "country": "EE.UU.",
     "year": "2025",
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-326528/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-134925/",
+    "title": "Harry Potter y las reliquias de la muerte: Parte 2",
+    "genres": [
+      "Fantasía",
+      "Aventura"
+    ],
+    "plot": "Al igual que en la primera parte de esta última entrega cinematográfica inspirada en los libros superventas de la autora J.K. Rowling, Harry Potter, Hermione y Ron continúan intentando dar con el paradero de los Horrocruxes, los pedazos de alma que Voldemort escondió en diversos objetos relacionados con su vida para conseguir su mayor deseo: la inmortalidad. Es su única oportunidad para que Harry, 'El Elegido', tenga alguna posibilidad de acabar con &quot;El que no debe ser nombrado&quot; y de librar al mundo de la magia y de los 'muggles' de un futuro oscuro y aterrador. El problema reside en que ninguno sabe dónde están.Después de que el fallecido Albus Dumbledore acabara con el anillo de Marvolo Gaunt y de que Harry y Ron eliminaran el diario de Tom Riddle y el relicario de Salazar Slytherin, respectivamente, sólo quedan cuatro Horrocruxes pero, ¿qué aspecto tienen? Nuestros protagonistas, de nuevo interpretados por Daniel Radcliffe, Rupert Grint y Emma Watson, intentarán desvelar el misterioso cuento sobre los tres hermanos que les relató Xenophilius Lovegood -los poseedores de la Varita de Saúco, la Piedra de Resurrección y la Capa de Invisibilidad-, se infiltrarán en Gringotts -el banco de los magos- recurriendo a la poción multijugos y protegerán Hogwarts de un ejército de Mortífagos que amenaza la paz de ambos universos. En esta segunda parte, también dirigida por David Yates, sabremos qué forma tienen el resto de los Horrocruxes (la copa de Helga Hufflepuff, la Diadema de Rowena Ravenclaw, Nagini y el propio Harry Potter) y, entre otras novedades, descubriremos por fin la verdadera lealtad de Severus Snape. Además, como en el libro, la saga concluye con un epílogo que nos transporta 19 años después de la Batalla contra Voldemort y sus secuaces, ambientada donde empezó todo: el andén 9¾ de la estación King's Cross de Londres. ¿Quién habrá sobrevivido y a quién echaremos de menos?",
+    "director": [
+      "David Yates"
+    ],
+    "actors": [
+      "Daniel Radcliffe",
+      "Rupert Grint",
+      "Emma Watson"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
+    "year": "2011",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-134925/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000040557/",
+    "title": "Kraken: El libro negro de las horas",
+    "genres": [
+      "Suspense"
+    ],
+    "plot": "Vitoria, 2022. Unai López de Ayala, conocido como Kraken (Alejo Sauras), antiguo inspector y experto en perfiles criminales, recibe una misteriosa llamada que sacude sus certezas sobre su historia familiar: dispone de solo siete días para localizar el mítico Libro negro de las horas, una de las siete piezas bibliográficas más valiosas del mundo, o su madre, a quien creía fallecida hace décadas, pagará con su vida. Obligado a salir de su retiro, Unai se une a Esti (Maggie Civantos) en una frenética y angustiosa carrera contrarreloj que los lleva desde las calles de Vitoria hasta el corazón de Madrid, entre coleccionistas obsesivos y bibliófilos peligrosos. Cada pista y cada sospechoso lo obligan a trazar el perfil criminal más complejo de su carrera, uno que podría alterar por completo los recuerdos y secretos que guardaba sobre su propia familia.",
+    "director": [
+      "Manuel Sanabria"
+    ],
+    "actors": [
+      "Alejo Sauras",
+      "Maggie Civantos",
+      "Natalia Rodriguez"
+    ],
+    "type": "pelicula",
+    "country": "España",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000040557/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-27070/",
+    "title": "El Señor de los Anillos: La Comunidad del Anillo",
+    "genres": [
+      "Fantasía",
+      "Aventura"
+    ],
+    "plot": "La trilogía del Señor de los Anillos se estrenó en 2001 con La Comunidad del Anillo, le siguió Las dos torres en 2002 y acabó con El retorno del Rey en 2003.En este episodio de la trilogía, el joven y tímido hobbit, Frodo Bolsón, hereda un anillo. Lejos de ser una simple baratija, se trata del Anillo único, un instrumento de poder que permitiría a Sauron, el Señor Oscuro, reinar en la Tierra Media y convertir en esclavos a sus habitantes. Frodo, con la ayuda de una Compañía formada por hobbits, hombres, un mago, un enano y un elfo, tiene la misión de llevar el Anillo viajando por toda la Tierra Media hasta el Monte del Destino, lugar donde fue forjado, y destruirlo para siempre. Un tal periplo supone aventurarse muy lejos en Mordor, la tierra del Señor Oscuro, donde se concentra su ejército de orcos maléficos... La Compañía, no solo debe combatir las fuerzas externas del mal, sino también las fuerzas internas y la influencia corruptora que ejerce el propio anillo. El final de la historia está íntimamente ligado a la suerte de la Compañía.",
+    "director": [
+      "Peter Jackson"
+    ],
+    "actors": [
+      "Elijah Wood",
+      "Sean Astin",
+      "Ian McKellen"
+    ],
+    "rating": "4,6",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
+    "year": "2001",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-27070/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-186636/",
+    "title": "Top Gun : Maverick",
+    "genres": [
+      "Acción"
+    ],
+    "plot": "Después de más de treinta años de servicio, a Pete 'Maverick' Mitchell (Tom Cruise) su reputación le precede. Maverick fue uno de los mejores aviadores de la Armada, condecorado con medallas de combate y menciones, y responsable de hazañas legendarias. Claro que él no se esperaba volver a la academia de pilotos de combate Top Gun, donde le requieren como instructor de vuelo para formar a una nueva generación de jóvenes pilotos de combate, hombres y mujeres. Allí conocerá a Bradley 'Rooster' Bradshaw (Milles Teller), el hijo de Goose, su antiguo compañero fallecido, mientras intentará adaptarse a las nuevas tecnologías y la guerra de los drones.Esta película es la secuela de Top Gun: Idolos del aire (1986), mítico filme de los años 80 dirigido por Tony Scott.",
+    "director": [
+      "Joseph Kosinski"
+    ],
+    "actors": [
+      "Tom Cruise",
+      "Miles Teller",
+      "Jennifer Connelly"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2022",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-186636/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-19395/",
+    "title": "El bueno, el feo y el malo",
+    "genres": [
+      "Western"
+    ],
+    "plot": "Durante la Guerra de Secesión, tres hombres se lanzan en busca de un arca que contiene 200.000 dólares en monedas de oro robadas al ejército sudista. Tuco sabe que el tesoro se encuentra en un cementerio, mientras que Joe conoce el nombre inscrito sobre la lápida sepulcral que sirve de escondite. Se necesitan el uno al otro. Pero aparece un tercer hombre: Setenza, un desalmado que no vacila en masacrar a mujeres y niños para conseguir lo que quiere.Escrita y dirigida por Sergio Leone ('La muerte tenía un precio', 'Por un puñado de dólares'), 'El bueno, el feo y el malo' es una de las películas de western más conocidas de toda la historia del cine. Clint Eastwood ('Gran Torino', 'Million Dolar Baby') es el gran protagonista del largometraje y el que le dio una gran popularidad como actor en su papel del &quot;Bueno&quot;. Eli Wallach ('El Padrino. Parte III', 'Los siete magníficos') encarna a Tuco como el “Feo” y Lee Van Cleef (La muerte tenía un precio, Solo ante el peligro) se mete en la piel de Angel Eyes como el &quot;Malo&quot;. Todo un clásico.",
+    "director": [
+      "Sergio Leone"
+    ],
+    "actors": [
+      "Clint Eastwood",
+      "Eli Wallach",
+      "Lee Van Cleef"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     Italia",
+    "year": "1966",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-19395/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-268384/",
+    "title": "Robot salvaje",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Familia",
+      "Comedia"
+    ],
+    "plot": "Película de animación que adapta la novela gráfica The Wild Robot, el premiado bestseller de ciencia ficción escrito e ilustrado por Peter Brown. Un robot llamado ROZZUM unidad 7134, Roz para abreviar, naufraga en una isla deshabitada. Durante una aventura épica, este robot deberá aprender a adaptarse al duro entorno, descubriéndose también a sí mismo, y estableciendo gradualmente relaciones con otros animales de la isla, convirtiéndose poco a poco en uno más de los seres que habitan ese entorno que conectará la tecnología y la naturaleza.",
+    "director": [
+      "Chris Sanders"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2024",
+    "actors": [
+      "Lupita Nyong'o",
+      "Pedro Pascal",
+      "Kit Connor"
+    ],
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-268384/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-135528/",
+    "title": "Brave (Indomable)",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Comedia"
+    ],
+    "plot": "'Brave (Indomable)' es una vuelta de tuerca sobre el mundo clásico de las cursis damiselas, los valientes caballeros y demás parafernalia medieval. Merida, experta en tiro con arco, es la hija del rey Fergus y de la reina Elinor. Decidida a seguir su propio camino en la vida, se empeñará en convertirse en una temible guerrera, evitando así su destino de desvalida princesa. Pero sin quererlo, Merida pondrá en peligro a sus padres y desencadenará el caos en su reino y desafiará una tradición milenaria a ojos de tres grandes caballeros: el impresionante Lord MacGuffin, Lord Macintosh, y el irascible y desagradable Lord Dingwall. Para colmo, acudirá a una excéntrica y sabia anciana en busca de ayuda, y esta le concederá un desventurado deseo. A partir de ese momento, Merida se verá en peligro y tendrá que descubrir el verdadero sentido de la palabra valentía para desbaratar la terrible maldición que se cierne sobre ella y los suyos.En el reparto de voces originales encontramos a Kelly Macdonald como la revelde y decidida princesa Mérida, Emma Thompson como la reina Elinor, Billy Conolly como el rey Fergus y Craig Fergunson, Robbie Coltrane y Kevin McKidd como los tres caballeros.",
+    "director": [
+      "Mark Andrews",
+      "Brenda Chapman",
+      "Steve Purcell"
+    ],
+    "rating": "4,1",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2012",
+    "actors": [
+      "Kelly Macdonald",
+      "Billy Connolly",
+      "Emma Thompson"
+    ],
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-135528/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-309535/",
+    "title": "La isla de Amrum",
+    "genres": [
+      "Drama",
+      "Guerra"
+    ],
+    "plot": "En la isla de Amrum, primavera de 1945, Nanning, un niño de 12 años, se enfrenta a los últimos días de la Segunda Guerra Mundial ayudando a su familia: caza focas, pesca de noche y cuida los campos de la granja Bendixen. Apoyado en su amistad con Hermann, Nanning aprende a afrontar responsabilidades y desafíos desde muy pequeño.Con la llegada de la paz, la vida de posguerra trae obstáculos inesperados que lo obligan a encontrar su propio camino, en una historia basada en la infancia del director Hark Bohm.",
+    "director": [
+      "Fatih Akın"
+    ],
+    "actors": [
+      "Jasper Billerbeck",
+      "Laura Tonke",
+      "Diane Kruger"
+    ],
+    "type": "pelicula",
+    "country": "Alemania",
+    "year": "2025",
+    "rating": null,
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-309535/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000033909/",
+    "type": "pelicula",
+    "country": "Australia",
+    "year": "2026",
+    "actors": [
+      "Melanie Zanetti",
+      "Brad Elliott",
+      "Daley Pearson"
+    ],
+    "title": "Bluey en cines: Colección ¡A jugar con los amigos!",
+    "genres": [],
+    "plot": null,
+    "director": [],
+    "rating": null,
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000033909/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-209198/",
+    "title": "Friends: A XXX Parody",
+    "genres": [
+      "Erótico"
+    ],
+    "plot": "Parodia en clave de cine para adultos de la popular serie de televisión.",
+    "director": [
+      "Lee Roy Myers"
+    ],
+    "actors": [
+      "Riley Evans",
+      "Isis Taylor",
+      "Evan Stone"
+    ],
+    "rating": "3,0",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2009",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-209198/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-10439/",
+    "title": "La boda de mi mejor amigo",
+    "genres": [
+      "Comedia",
+      "Romántico"
+    ],
+    "plot": "Julianne nunca había pensado tener algo más con su mejor amigo Michael. Pasa el tiempo y cada uno se traslada a ciudades diferentes. Al cabo de unos años él manda la invitación de su boda a su amiga, se casa con una atractiva joven llamada Kimberly y le gustaría que Julianne fuese dama de honor. Ella se traslada inmediatamente a Chicago para ayudarle con los preparativos y a medida que se acerca el enlace Julianne se da cuenta de que está enamorada de su amigo y que tiene que detener la boda como sea.",
+    "director": [
+      "P.J. Hogan"
+    ],
+    "actors": [
+      "Julia Roberts",
+      "Dermot Mulroney",
+      "Cameron Diaz"
+    ],
+    "rating": "3,6",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "1997",
+    "source": "web",
+    "source_query": "Friends",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-10439/"
   }
 ]
