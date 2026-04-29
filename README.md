@@ -10,6 +10,52 @@ Instala las dependencias necesarias:
 pip install -r requirements.txt
 ```
 
+## Docker
+
+Construir la imagen:
+
+```bash
+docker build -t culturasearch:local .
+```
+
+Ejecutar el RAG interactivo usando Ollama en el host:
+
+```bash
+docker run --rm -it \
+  -e OLLAMA_ENDPOINT=http://host.docker.internal:11434 \
+  -e OLLAMA_MODEL=neural-chat \
+  -v ${PWD}/data:/app/data \
+  -v ${PWD}/bd:/app/bd \
+  culturasearch:local
+```
+
+En Windows PowerShell:
+
+```powershell
+docker run --rm -it `
+  -e OLLAMA_ENDPOINT=http://host.docker.internal:11434 `
+  -e OLLAMA_MODEL=neural-chat `
+  -v ${PWD}/data:/app/data `
+  -v ${PWD}/bd:/app/bd `
+  culturasearch:local
+```
+
+Tambien puedes usar Compose con un servicio de Ollama:
+
+```bash
+docker compose up -d ollama
+docker compose exec ollama ollama pull neural-chat
+docker compose run --rm app
+```
+
+Para ejecutar otros comandos dentro de la imagen:
+
+```bash
+docker run --rm -it culturasearch:local python main.py crawl
+docker run --rm -it culturasearch:local python main.py scrape
+docker run --rm -it culturasearch:local python run_retrieval_demo.py
+```
+
 ## Estructura del Proyecto
 
 El proyecto está dividido en módulos independientes pero integrados:
