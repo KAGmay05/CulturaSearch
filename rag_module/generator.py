@@ -1,3 +1,5 @@
+import os
+
 import requests
 
 
@@ -5,9 +7,9 @@ class OllamaGenerator:
     """Generador LLM usando Ollama (local)."""
     
     def __init__(self, model_name: str = "neural-chat", 
-                 endpoint: str = "http://localhost:11434"):
+                 endpoint: str | None = None):
         self.model = model_name
-        self.endpoint = endpoint
+        self.endpoint = endpoint or os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
         self.is_available = self._check_available()
     
     def _check_available(self) -> bool:

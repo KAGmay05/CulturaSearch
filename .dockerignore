@@ -1,0 +1,17 @@
+.git
+.gitignore
+.vite
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+documentacion.docx
+documentacion.pdf
+
+bd/*.index
+bd/*.pkl
+
+debug_*.py
+debug_output.html
