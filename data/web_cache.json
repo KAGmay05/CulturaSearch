@@ -245,7 +245,7 @@
     "country": "EE.UU.",
     "year": "2026",
     "source": "web",
-    "source_query": "de que trata tom y jerry",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-282076/"
   },
   {
@@ -392,7 +392,7 @@
     "year": "2026",
     "rating": null,
     "source": "web",
-    "source_query": "Friends",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000040557/"
   },
   {
@@ -462,7 +462,7 @@
     "country": "España,\n                                    \n                     Italia",
     "year": "1966",
     "source": "web",
-    "source_query": "Friends",
+    "source_query": "Dark",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-19395/"
   },
   {
@@ -607,5 +607,370 @@
     "source": "web",
     "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-10439/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000036042/",
+    "title": "Billie Eilish - Hit Me Hard And Soft: The Tour Live In 3D",
+    "genres": [
+      "Concierto"
+    ],
+    "plot": "Billie Eilish presenta una película-concierto en el que revive su gira mundial con una gran puesta en escena muy envolvente. Este proyecto, codirigido por James Cameron, busca llevar a todo el público al centro del espectáculo, y lo hace a través de un lenguaje visual inmersivo y el sonido que reproduce la energía del directo.Esta película mostrará la fuerza emocional de cada interpretación de la cantante y su equipo, y también se verá la magnitud técnica de llevar a cabo de un espectáculo de este nivel.",
+    "director": [
+      "James Cameron",
+      "Billie Eilish"
+    ],
+    "actors": [
+      "Billie Eilish",
+      "James Cameron",
+      "Finneas O'Connell"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000036042/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-6641/",
+    "title": "El silencio de los corderos",
+    "genres": [
+      "Suspense",
+      "Crimen",
+      "Terror"
+    ],
+    "plot": "Esta película de suspense nos lleva a vivir una terrorífica historia que comienza con una serie de asesinatos de unas adolescentes en Alabama.Clarisse (Jodie Foster), una joven policía con un currículum intachable, sigue la pista del criminal para poder localizarle. Para ello pide ayuda a Hannibal Lecter (Anthony Hopkins), un sádico psiquiatra que se encuentra encarcelado en una prisión de gran seguridad.",
+    "director": [
+      "Jonathan Demme"
+    ],
+    "actors": [
+      "Anthony Hopkins",
+      "Jodie Foster",
+      "Scott Glenn"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "1991",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-6641/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-221904/",
+    "title": "Alicia a través del espejo",
+    "genres": [
+      "Fantasía",
+      "Comedia",
+      "Familia"
+    ],
+    "plot": "Cuando Alicia (Mia Wasikowska) despierta en el País de las Maravillas, la joven protagonista deberá viajar a través de este mundo mágico e intentar cambiar el pasado con la ayuda de un enigmático artilugio conocido como la cronosfera, todo con el fin de rescatar a su amigo el Sombrerero Loco (Johnny Depp). Solo así podrá detener al malvado Tiempo (Sacha Baron Cohen) antes de que se cumpla el plazo marcado por el reloj y el País de las Maravillas se convierta en un mundo estéril y sin vida. Y, por si fuera poco, también estará en su mano frenar los malvados planes de la Reina Roja (Helena Bonham Carter), con la que se volverá a ver las caras en un nuevo enfrentamiento. En esta nueva aventura de fantasía, Alicia, con la ayuda de algunos nuevos amigos, tendrá que enfrentarse a distintos obstáculos para lograr su objetivo en esa realidad en la que todo es mágicamente posible o imposible.James Bobin (El tour de los Muppets, Los Muppets) toma el relevo de Tim Burton como director de esta secuela de Alicia en el País de las Maravillas (2010), con guión de Linda Woolverton (Maléfica, El Rey León). De nuevo encontramos en el reparto protagonista a Mia Wasikowska (La cumbre escarlata, Maps To The Stars, Sólo los amantes sobreviven), Johnny Depp (Black Mass. Estrictamente criminal, El llanero solitario, Enemigos públicos) y Helena Bonham Carter (Cenicienta, Sufragistas, El discurso del rey), además de a Anne Hathaway (El becario, Interstellar) como la Reina Blanca y a Stephen Fry (El Hobbit: La batalla de los cinco ejércitos, Tristram Shandy: a cock and a bull story) como la voz del Gato de Cheshire. Además se suman al reparto del film los actores Sacha Baron Cohen (Agente contrainteligente, Los Miserables) como Tiempo, y Rhys Ifans (Serena, Lío en Broadway) como Zanik Hightopp.",
+    "director": [
+      "James Bobin"
+    ],
+    "actors": [
+      "Mia Wasikowska",
+      "Johnny Depp",
+      "Lindsay Duncan"
+    ],
+    "rating": "3,3",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2016",
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-221904/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000013045/",
+    "title": "La Odisea",
+    "genres": [
+      "Acción",
+      "Fantasía"
+    ],
+    "plot": "El legendario Odiseo lucha por regresar a Ítaca tras la Guerra de Troya, enfrentándose a peligros épicos y criaturas míticas. En su largo viaje, desafía a dioses caprichosos y supera obstáculos casi imposibles. Cada desafío pone a prueba su ingenio, valentía y resistencia.Su mayor deseo es reencontrarse con su amada Penélope y recuperar su hogar, enfrentando un destino lleno de aventuras inolvidables y lecciones de coraje. A lo largo del camino, la fidelidad, el honor y la astucia serán sus mejores aliados en esta odisea inolvidable.",
+    "director": [
+      "Christopher Nolan"
+    ],
+    "actors": [
+      "Matt Damon",
+      "Tom Holland",
+      "Charlize Theron"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000013045/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000004629/",
+    "title": "Las ovejas detectives",
+    "genres": [
+      "Crimen",
+      "Comedia"
+    ],
+    "plot": "Cada noche, un pastor solitario lee en voz alta historias de asesinatos, convencido de que sus ovejas pueden escuchar los relatos que les cuentan. Cuando el pastor aparece muerto en raras circunstancias, el rebaño entiende de inmediato que no se trata de un accidente. Decididas a hacer justicia por su cuenta, las ovejas utilizan lo aprendido de los relatos que les contaba el pastor para investigar el crimen. Con ingenio, observación y un peculiar sentido común, se embarcan en una inesperada investigación para descubrir quién ha acabado con la vida del pastor.",
+    "director": [
+      "Kyle Balda"
+    ],
+    "actors": [
+      "Hugh Jackman",
+      "Nicholas Braun",
+      "Nicholas Galitzine"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Irlanda,\n                                    \n                     Gran Bretaña",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000004629/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-171223/",
+    "title": "El Secreto de Sus Ojos",
+    "genres": [
+      "Drama",
+      "Crimen",
+      "Romántico",
+      "Suspense"
+    ],
+    "plot": "Benjamin Espósito (Ricardo Darín) se ha retirado recientemente de su cargo en el Juzgado de lo Penal. Con bastante tiempo libre, ahora se dedica a escribir un libro. Benjamin utiliza su experiencia para contar una historia trágica que ocurrió en 1974.En aquella época el Departamento de Justicia para el que trabajaba, fue designado para investigar la violación y posterior asesinato de una joven. Gracias a ello, Benjamin puede ponerse en contacto con Ricardo Morales (Pablo Rago), marido de la fallecida y a quien promete ayudar a encontrar al culpable. Para su labor de investigación, cuenta con la ayuda de su gran amigo, Pablo Sandoval (Guillermo Francella), y de su jefa, Irene Menéndez Hastings (Soledad Villamil). Benjamin acaba más involucrado de lo que creía en el relato.",
+    "director": [
+      "Juan José Campanella"
+    ],
+    "actors": [
+      "Ricardo Darín",
+      "Soledad Villamil",
+      "Pablo Rago"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     Argentina",
+    "year": "2009",
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-171223/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-262273/",
+    "title": "Klaus",
+    "genres": [
+      "Animación"
+    ],
+    "plot": "Jesper es cartero. Como era el peor estudiante de la academia postal, le destinan a Smeerensburg, un gélido lugar más allá del Círculo Polar Ártico. Sus habitantes nunca envían cartas, de modo que Jesper está a punto de rendirse... hasta que encuentra a Klaus. Este misterioso fabricante de juguetes vive aislado en una cabaña repleta de juguetes hechos a mano. Ambos se se harán amigos mientras deciden traer de vuelta la alegría a Smeerensburg. Porque un verdadero acto de generosidad siempre genera otro. Esta original comedia navideña de animación sobre el origen de Papá Noel es el debut en la dirección del animador español Sergio Pablos, responsable de la idea original de las películas Gru, mi villano favorito (2010) y Smallfoot (2018). Escriben el libreto de la película Zach Lewis y Jim Mahoney, que también debutan como guionistas con este largometraje. El reparto de voces de la versión original está formado por los actores Jason Schwartzman (Mozart in the Jungle, El gran hotel Budapest), Rashida Jones (Parks and Recreation, El gran año), J.K. Simmons (Liga de la Justicia, El muñeco de nieve) y Joan Cusack (Descontroladas, El último tour). En la versión en castellano las voces son las de los actores Quim Gutiérrez (Abracadabra), Belén Cuesta (A pesar de todo) y Luis Tosar (Quien a hierro mata).",
+    "director": [
+      "Sergio Pablos"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     EE.UU.",
+    "year": "2019",
+    "actors": [
+      "Jason Schwartzman",
+      "Rashida Jones",
+      "J.K. Simmons"
+    ],
+    "source": "web",
+    "source_query": "recomiendame peliculas de ciencia ficcion",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-262273/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-267338/",
+    "title": "La sociedad de la nieve",
+    "genres": [
+      "Suspense",
+      "Drama"
+    ],
+    "plot": "El 12 de octubre de 1972, un avión chárter despega de Uruguay con destino a Chile. A bordo viajan cinco miembros de la tripulación y 40 pasajeros, la mayoría de ellos miembros del equipo de rugby Old Christians, además de algunos amigos y familiares a los que se convenció para que acompañaran al equipo durante unos días debido al ventajoso precio de del billete: 45 dólares. Pero el vuelo les lleva sobre los peligrosos Andes, donde se produce el desastre y el avión se estrella. Al principio, los 29 supervivientes del accidente aún tienen esperanzas de ser rescatados rápidamente. Se atiende a los heridos, se busca objetos útiles en el equipaje, se racionalizan las provisiones y se llama a los aviones de búsqueda que pasan a lo lejos. Pero el rápido descenso de las temperaturas durante las noches de invierno pronto se cobra más víctimas y los pocos alimentos de que disponen se agotan rápidamente. Hay que tomar una decisión difícil, sobre todo porque una radio reparada pronto trae la noticia de que la operación de búsqueda ya se ha cancelado. Después de todo, en 34 accidentes ocurridos en los Andes hasta la fecha, nunca se ha rescatado a una sola persona con vida.",
+    "director": [
+      "Juan Antonio Bayona"
+    ],
+    "actors": [
+      "Enzo Vogrincic Roldán",
+      "Simón Hempe",
+      "Matías Recalt"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     Uruguay,\n                                    \n                     Chile",
+    "year": "2023",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-267338/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000041452/",
+    "title": "El yerno",
+    "genres": [
+      "Comedia",
+      "Drama"
+    ],
+    "plot": "José Sánchez, un hombre curtido por una racha de fracasos personales y profesionales, encuentra una inesperada segunda oportunidad al abrirse paso en el mundo de la política. Gracias a su carisma deslenguado, su instinto para la confrontación y una presencia tan peculiar como inolvidable marcada por su icónico bigote, logra convertirse en una figura influyente y temida dentro de un entorno lleno de ambiciones y rivalidades.",
+    "director": [
+      "Gerardo Naranjo"
+    ],
+    "actors": [
+      "Adrián Vazquez",
+      "Jero Medina",
+      "Verónica Bravo"
+    ],
+    "type": "pelicula",
+    "country": "Méjico,\n                                    \n                     Chile,\n                                    \n                     EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000041452/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-39186/",
+    "title": "El Señor de los Anillos: Las dos torres",
+    "genres": [
+      "Aventura",
+      "Fantasía"
+    ],
+    "plot": "Tras la muerte de Boromir y la desaparición de Gandalf, la Comunidad se divide en tres. Perdidos en las colinas de Emyn Muil, Frodo y Sam descubren que les persigue Gollum, una criatura volátil corrompida por el Anillo Único. Éste promete a los hobbits conducirles hasta la Puerta Negra de Mordor. Aragorn, Legolas y Gimli atraviesan la Tierra Media y llegan a Rohan, el reino de Théoden. El anciano rey, manipulado por el espía de Saruman, el siniestro Lengua de Serpiente, ha caído en las redes del malvado mago. Éowyn, la sobrina del rey, descubre en Aragorn a todo un líder. Mientras tanto, los hobbits Merry y Pippin, que estaban prisioneros de los Uruk-hai, han escapado y descubren en el misterioso Bosque de Fangorn a un aliado inesperado: Bárbol, guardián de los árboles y representante de un antiguo pueblo vegetal que Saruman había diezmado…",
+    "director": [
+      "Peter Jackson"
+    ],
+    "actors": [
+      "Elijah Wood",
+      "Sean Astin",
+      "Viggo Mortensen"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
+    "year": "2002",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-39186/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-115362/",
+    "title": "El caballero oscuro",
+    "genres": [
+      "Acción",
+      "Suspense"
+    ],
+    "plot": "Después de derrotar a la Orden de las Sombras y frustrar al jefe de la mafia Carmine Falcone en 'Batman Begins', Bruce Wayne vuelve a enfundarse el traje del hombre murciélago para combatir el crimen en Gotham.Con Falcone fuera, el mafioso Salvatore Maroni se ha hecho con el control en la ciudad y parece que la lucha de Batman frente a los criminales será interminable. Por suerte, la ciudad cuenta ahora con Harvey Dent, un nuevo Fiscal del Distrito caracterizado por su mano dura contra el crimen, lo que da un aire de esperanza a Gotham y permite que Bruce se centre en Rachel Dawes, el amor de su vida y la única que conoce su verdadera identidad.Sin embargo, la llegada de un nuevo villano a la ciudad destruirá todos los planes de Batman. Se trata de El Joker, un psicópata retorcido y sádico, con una morbosa fascinación por todo lo que rodea al murciélago. Pronto comenzará a sembrar el pánico y a causar estragos en Gotham, convirtiéndose en el peor enemigo posible para El caballero oscuro.",
+    "director": [
+      "Christopher Nolan"
+    ],
+    "actors": [
+      "Christian Bale",
+      "Heath Ledger",
+      "Aaron Eckhart"
+    ],
+    "rating": "4,6",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
+    "year": "2008",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-115362/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000001453/",
+    "title": "El día de la revelación",
+    "genres": [
+      "Ciencia ficción",
+      "Suspense"
+    ],
+    "plot": "En un futuro no muy lejano, la humanidad está a punto de describir la verdad sobre la existencia de extraterrestres, un secreto que ha permanecido oculto durante varias décadas. Mientras millones de personas se preparan para recibir la revelación, algunas viejas creencias se ven cuestionadas, y la forma en la que entendemos el universo empieza a cambiar. Entre conspiraciones, avances de la tecnología y encuentros inesperados, la revelación promete cambiar vidas, relaciones y la propia percepción de nuestro lugar en el universo para siempre.",
+    "director": [
+      "Steven Spielberg"
+    ],
+    "actors": [
+      "Emily Blunt",
+      "Josh O'Connor",
+      "Colin Firth"
+    ],
+    "rating": "3,0",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000001453/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-218956/",
+    "title": "Toy Story 4",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Familia",
+      "Comedia"
+    ],
+    "plot": "El sheriff Woody y el miembro del Comando Estelar Buzz Lightyear, junto al resto de la pandilla de juguetes, están a punto de hacer un viaje familiar por carretera con Bonnie, su querida dueña. Pero cuando aparece Forky, una manualidad hecha por Bonnie convertida en juguete, empiezan los problemas. Forky, que es un tenedor-cuchara, no se siente como un juguete, y por eso Woody quiere ayudarle a descubrir la importancia de ser el juguete de una niña. Claro que todo se complica cuando este tenedor-cuchara salta de la autocaravana en la que viajan, y Woody sale en su busca. En esta aventura por carretera descubrirán lo grande que puede ser el mundo para un juguete.Cuarta entrega de la saga Toy Story que en esta ocasión dirige Josh Cooley, que debuta en la dirección de largometrajes con este filme tras encargarse de co-escribir el guión de Del revés (Inside Out) (2015). El reparto de voces del filme en su versión original contará de nuevo con Tom Hanks (Los archivos del Pentágono) como Woody, Tim Allen (Uno para todas) como Buzz Lightyear, Annie Potts (El joven Sheldon) como Bo Peep y Joan Cusack (Las ventajas de ser un marginado) como Jessie. Se incorporan al reparto de voces Tony Hale (Con amor, Simon), Christina Hendricks (The Neon Demon), Keegan-Michael Key (Predator), Keanu Reeves (John Wick: Capítulo 3 - Parabellum) y el también director Jordan Peele (Nosotros).",
+    "director": [
+      "Josh Cooley"
+    ],
+    "rating": "4,1",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2019",
+    "actors": [
+      "Tom Hanks",
+      "Tim Allen",
+      "Annie Potts"
+    ],
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-218956/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-317554/",
+    "title": "Parthenope",
+    "genres": [
+      "Drama",
+      "Romántico"
+    ],
+    "plot": "La película cuenta la historia de Parthenope desde su nacimiento en 1950 hasta el presente, una travesía femenina que está impregnada de una pasión inquebrantable por la libertad, Nápoles, y los distintos rostros del amor. A través de momentos como el verano perfecto en Capri y la despreocupación de la juventud, que termina en desilusión, Parthenope explora las complejidades de los amores verdaderos, inútiles e indecibles, mientras se enfrenta a las ironías trágicas y melancolías de los napolitanos.",
+    "director": [
+      "Paolo Sorrentino"
+    ],
+    "actors": [
+      "Celeste Dalla Porta",
+      "Stefania Sandrelli",
+      "Gary Oldman"
+    ],
+    "rating": "3,1",
+    "type": "pelicula",
+    "country": "Francia,\n                                    \n                     Italia",
+    "year": "2025",
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-317554/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-326680/",
+    "title": "Memorias de un caracol",
+    "genres": [
+      "Animación",
+      "Drama"
+    ],
+    "plot": "En la Australia de la década de 1970, la vida de Grace, una niña algo solitaria e inadaptada, está profundamente afectada por las dificultades y la pérdida. Tras la disolución de su familia y la separación de su hermano gemelo, Gilbert, Grace encuentra consuelo en la colección de adornos de caracoles, una actividad que le ayuda a calmar su soledad. Su vida cambia de manera radical, inesperada y esperanzadora cuando entabla una amistad con Pinky, una anciana algo excéntrica que la motiva a abrirse al mundo y a dejar atrás las preocupaciones que perturban su casa y su cabeza.",
+    "director": [
+      "Adam Elliot"
+    ],
+    "rating": "3,9",
+    "type": "pelicula",
+    "country": "Australia",
+    "year": "2024",
+    "actors": [
+      "Sarah Snook",
+      "Jacki Weaver",
+      "Eric Bana"
+    ],
+    "source": "web",
+    "source_query": "Dark",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-326680/"
   }
 ]
