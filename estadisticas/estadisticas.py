@@ -94,8 +94,8 @@ for p, c in top_5_paises.items():
     print(f" - {p}: {c}")
 print("-" * 30)
 
-# 2. Preparar datos: Explotar géneros (ya que son listas)
-df_exploded = df.explode('genres')
+# 2. Preparar datos: Explotar géneros y RESETEAR ÍNDICE
+df_exploded = df.explode('genres').reset_index(drop=True) # <-- Añade .reset_index(drop=True)
 
 # 3. Filtrar por Top 5 Países y Top 5 Géneros
 top_paises = df['country'].value_counts().head(5).index
@@ -104,11 +104,14 @@ top_generos = df_exploded['genres'].value_counts().head(5).index
 df_filtered = df_exploded[
     (df_exploded['country'].isin(top_paises)) & 
     (df_exploded['genres'].isin(top_generos))
-]
+].copy() # Usar .copy() evita avisos de SettingWithCopyWarning
 
-# 4. Crear tabla cruzada para la gráfica
+# 4. Crear tabla cruzada
+# Ahora ya no habrá conflicto de etiquetas duplicadas
 pivot_df = pd.crosstab(df_filtered['country'], df_filtered['genres'])
-pivot_df = pivot_df.reindex(top_paises) # Ordenar por importancia de país
+
+# Reindexar para mantener el orden de importancia de los países
+pivot_df = pivot_df.reindex(top_paises)
 
 # 5. Gráfica de Barras Apiladas (Escala de Grises)
 plt.style.use('seaborn-v0_8-white')

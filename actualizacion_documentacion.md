@@ -39,6 +39,25 @@ La orquestación actual centralizó las operaciones en `main.py`, permitiendo ej
 *(Mantener todo el texto y las fórmulas igual, solo reemplazar el párrafo final por lo siguiente:)*
 Para el corpus actual ajustado del corte 2 (1,029 documentos), este costo de clasificación de vectores es de ejecución casi inmediata en CPU. El costo temporal principal en esta nueva iteración ha pasado a concentrarse en la latencia de inferencia propia de la etapa de generación de texto del modelo RAG y el retraso de red producto de posibles consultas web externas.
 
+## 2.6 Criterios de Desempate y Estabilidad del Ranking
+
+El criterio primario de ordenación es el score de similitud coseno (producto punto sobre embeddings normalizados). En la implementación actual la ordenación se realiza numéricamente por ese score y no existe un desempate explícito codificado; en igualdad exacta el orden relativo queda determinado por el índice interno y el comportamiento del algoritmo de ordenamiento.
+
+Para evitar reordenamientos indeseados por diferencias numéricas insignificantes se recomienda definir una tolerancia (epsilon) para considerar dos scores como empate; por ejemplo, epsilon = 1e-3. Solo cuando |score_a - score_b| < epsilon se deben aplicar criterios secundarios de desempate.
+
+Política de desempate recomendada (aplicada en orden, de mayor a menor prioridad):
+
+1. Rerank score (cross-encoder), si está disponible.
+2. Score neural bruto (producto punto / similitud coseno antes de cualquier normalización adicional).
+3. Score léxico normalizado (TF‑IDF o similar) — favorece coincidencia léxica exacta.
+4. Mayor coincidencia de géneros con la consulta (conteo de géneros en común).
+5. Mayor completitud de metadatos (presencia/ausencia de campos clave: plot, director, elenco, año, rating), como un índice compuesto normalizado a [0,1].
+6. Popularidad / rating (valor numérico normalizado; documentar parsing de strings con comas o nulls).
+7. Año de publicación (preferir más reciente si procede al caso de uso).
+8. Identificador estable (url o índice) como desempate final para garantizar determinismo entre ejecuciones.
+
+Nota: los campos numéricos deben normalizarse previamente y definirse de forma consistente. Dado que el ranking final se utiliza como "contexto" para el módulo RAG (y no como salida final en bruto), pequeñas variaciones mantienen un impacto limitado sobre la generación; no obstante, la estabilidad es importante para la experiencia de usuario en listados, snippets y resaltados.
+
 ## 2.7 Fortalezas y Limitaciones del Enfoque Actual *(Reescribir)*
 **Fortalezas del Corte 2:**
 • **Comprensión y Síntesis:** Gracias a RAG, el modelo ya no solo recupera datos, sino que redacta respuestas hiladas, explica relaciones complejas y elabora justificaciones en lenguaje humano.
