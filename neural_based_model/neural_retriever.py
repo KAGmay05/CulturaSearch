@@ -1,8 +1,9 @@
 import json
+import math
 import os
 import pickle
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import faiss
 import numpy as np
@@ -195,6 +196,139 @@ class NeuralRetriever:
                 posting = self.lexical_index.setdefault(token, {})
                 posting[doc_idx] = tf
         self.doc_count = len(self.documents)
+
+    def _normalize_text_tokens(self, value: str) -> List[str]:
+        """Normalizes free text into project-consistent lexical tokens."""
+        if not value:
+            return []
+        return indexer.clean_text(str(value))
+
+    def _extract_query_genre_tokens(self, query: str) -> set[str]:
+        """Extracts query tokens that overlap with known genre labels."""
+        query_tokens = set(self._normalize_text_tokens(query))
+        if not query_tokens:
+            return set()
+
+        genre_tokens: set[str] = set()
+        for doc in self.documents:
+            genres = doc.get("genres", [])
+            if not isinstance(genres, list):
+                genres = [genres]
+            for genre in genres:
+                genre_tokens.update(self._normalize_text_tokens(str(genre)))
+        return query_tokens & genre_tokens
+
+    def _genre_match_score(self, query_genre_tokens: set[str], doc: Dict) -> float:
+        """Scores how well document genres align with genre tokens present in the query."""
+        if not query_genre_tokens:
+            return 0.0
+
+        genres = doc.get("genres", [])
+        if not isinstance(genres, list):
+            genres = [genres]
+
+        doc_genre_tokens: set[str] = set()
+        for genre in genres:
+            doc_genre_tokens.update(self._normalize_text_tokens(str(genre)))
+
+        if not doc_genre_tokens:
+            return 0.0
+        return float(len(query_genre_tokens & doc_genre_tokens)) / float(len(query_genre_tokens))
+
+    @staticmethod
+    def _metadata_completeness_score(doc: Dict) -> float:
+        """Measures how complete the most relevant retrieval metadata is for a document."""
+        metadata_fields = (
+            "title",
+            "plot",
+            "genres",
+            "actors",
+            "director",
+            "creator",
+            "country",
+            "year",
+            "rating",
+            "type",
+            "seasons",
+            "episodes",
+        )
+
+        present = 0
+        for field in metadata_fields:
+            value = doc.get(field)
+            if value is None:
+                continue
+            if isinstance(value, str) and not value.strip():
+                continue
+            if isinstance(value, list) and not value:
+                continue
+            present += 1
+        return float(present)
+
+    @staticmethod
+    def _popularity_score(doc: Dict) -> float:
+        """Returns popularity/rating signal, preferring popularity when available."""
+        raw_value = doc.get("popularity", doc.get("rating"))
+        if raw_value is None:
+            return 0.0
+        if isinstance(raw_value, (int, float)):
+            numeric_value = float(raw_value)
+        else:
+            text = str(raw_value).strip().replace(",", ".")
+            try:
+                numeric_value = float(text)
+            except ValueError:
+                return 0.0
+        if math.isnan(numeric_value) or math.isinf(numeric_value):
+            return 0.0
+        return numeric_value
+
+    def _resolve_result_document(self, result: SearchResult) -> Dict:
+        """Resolves full document metadata for a ranked result."""
+        doc_idx = self.url_to_doc_idx.get(result.url)
+        if doc_idx is not None and 0 <= doc_idx < len(self.documents):
+            return self.documents[doc_idx]
+        return {
+            "url": result.url,
+            "title": result.title,
+            "plot": result.plot,
+            "type": result.media_type,
+        }
+
+    def _stable_rank_indices(
+        self,
+        *,
+        primary_scores: Sequence[float],
+        query: str,
+        docs: Sequence[Dict],
+        original_positions: Sequence[int],
+    ) -> np.ndarray:
+        """Builds a deterministic ranking with explicit secondary tie-break criteria."""
+        query_genre_tokens = self._extract_query_genre_tokens(query)
+        primary = np.asarray(primary_scores, dtype=float)
+        genre_scores = np.array(
+            [self._genre_match_score(query_genre_tokens, doc) for doc in docs],
+            dtype=float,
+        )
+        metadata_scores = np.array(
+            [self._metadata_completeness_score(doc) for doc in docs],
+            dtype=float,
+        )
+        popularity_scores = np.array(
+            [self._popularity_score(doc) for doc in docs],
+            dtype=float,
+        )
+        positions = np.asarray(original_positions, dtype=int)
+
+        return np.lexsort(
+            (
+                positions,
+                -popularity_scores,
+                -metadata_scores,
+                -genre_scores,
+                -primary,
+            )
+        )
 
     def _compute_lexical_scores(self, query: str) -> np.ndarray:
         """Computes TF-IDF-like lexical scores with partial-token coverage penalties."""
@@ -414,7 +548,12 @@ class NeuralRetriever:
         fused_scores = neural_weight * neural_norm + lexical_weight * lexical_norm
 
         top_k = max(1, min(top_k, len(fused_scores)))
-        sorted_indices = np.argsort(fused_scores)[::-1][:top_k]
+        sorted_indices = self._stable_rank_indices(
+            primary_scores=fused_scores,
+            query=query,
+            docs=self.documents,
+            original_positions=np.arange(len(self.documents)),
+        )[:top_k]
 
         results: List[SearchResult] = []
         for rank, idx in enumerate(sorted_indices, start=1):
@@ -483,7 +622,13 @@ class NeuralRetriever:
 
         final_scores = (1.0 - rerank_weight) * base_norm + rerank_weight * rerank_norm
         top_k = max(1, min(top_k, len(candidates)))
-        sorted_idx = np.argsort(final_scores)[::-1][:top_k]
+        candidate_docs = [self._resolve_result_document(candidate) for candidate in candidates]
+        sorted_idx = self._stable_rank_indices(
+            primary_scores=final_scores,
+            query=query,
+            docs=candidate_docs,
+            original_positions=np.arange(len(candidates)),
+        )[:top_k]
 
         reranked: List[SearchResult] = []
         for rank, idx in enumerate(sorted_idx, start=1):
