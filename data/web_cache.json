@@ -68,7 +68,7 @@
     "country": "EE.UU.",
     "year": "2026",
     "source": "web",
-    "source_query": "Friends",
+    "source_query": "series de romance",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000008742/"
   },
   {
@@ -416,12 +416,12 @@
     "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
     "year": "2001",
     "source": "web",
-    "source_query": "Friends",
+    "source_query": "series de romance",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-27070/"
   },
   {
     "url": "https://www.sensacine.com/peliculas/pelicula-186636/",
-    "title": "Top Gun : Maverick",
+    "title": "Top Gun: Maverick",
     "genres": [
       "Acción"
     ],
@@ -439,7 +439,7 @@
     "country": "EE.UU.",
     "year": "2022",
     "source": "web",
-    "source_query": "Friends",
+    "source_query": "series de romance",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-186636/"
   },
   {
@@ -607,5 +607,669 @@
     "source": "web",
     "source_query": "Friends",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-10439/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-116305/",
+    "title": "Harry Potter y el Misterio del Príncipe",
+    "genres": [
+      "Fantasía",
+      "Aventura"
+    ],
+    "plot": "La sombra demoniaca de Voldemort se cierne cada vez más sobre el universo de los Muggle y el mundo de la magia. Hogwarts ha dejado de ser un remanso de paz, el peligro ronda en el corazón del castillo... Pero Dumbledore está más decidido que nunca a preparar a Harry para su combate final, ahora inminente. Juntos, el viejo maestro y el joven mago van a intentar romper las defensas de Voldemort. Para ayudarle en esta delicada empresa, Dumbledore va a acosar y manipular a su antiguo colega, el profesor Horace Slughorn, al que cree en posesión de una información vital sobre el joven Voldemort. Pero otro &quot;mal&quot; acecha este año a los estudiantes: ¡la edad del pavo! A Harry cada vez le gusta más Ginny, lo que no deja indiferente a su rival, Dean Thomas; Lavender Brown le ha echado el ojo a Ron, pero se ha olvidado del poder &quot;mágico&quot; de los bombones de Romilda Vane; Hermione, muerta de celos, decide ocultar sus sentimientos cueste lo que cueste. El amor se ha apoderado de todos - menos de uno. Un estudiante parece librarse de su efecto. En la sombra, persigue con tesón un objetivo tan misterioso como inquietante... hasta que la inevitable tragedia sacude Hogwarts para siempre...",
+    "director": [
+      "David Yates"
+    ],
+    "actors": [
+      "Daniel Radcliffe",
+      "Rupert Grint",
+      "Emma Watson"
+    ],
+    "rating": "4,2",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
+    "year": "2009",
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-116305/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000001453/",
+    "title": "El día de la revelación",
+    "genres": [
+      "Ciencia ficción",
+      "Suspense"
+    ],
+    "plot": "En un futuro no muy lejano, la humanidad está a punto de describir la verdad sobre la existencia de extraterrestres, un secreto que ha permanecido oculto durante varias décadas. Mientras millones de personas se preparan para recibir la revelación, algunas viejas creencias se ven cuestionadas, y la forma en la que entendemos el universo empieza a cambiar. Entre conspiraciones, avances de la tecnología y encuentros inesperados, la revelación promete cambiar vidas, relaciones y la propia percepción de nuestro lugar en el universo para siempre.",
+    "director": [
+      "Steven Spielberg"
+    ],
+    "actors": [
+      "Emily Blunt",
+      "Josh O'Connor",
+      "Colin Firth"
+    ],
+    "rating": "3,0",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000001453/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-313220/",
+    "title": "Backrooms",
+    "genres": [
+      "Terror",
+      "Ciencia ficción"
+    ],
+    "plot": "Una serie de perturbadores vídeos caseros documenta fenómenos sobrenaturales que sumen a sus testigos en el miedo y la angustia. Este filme de terror se inspira en los cortometrajes virales The Backrooms de Kane Parsons, que se hicieron famosos en YouTube por su inquietante representación de espacios infinitos y laberínticos. Combinando la estética del metraje encontrado con el terror psicológico, la película explora los límites de lo desconocido, donde entornos cotidianos se tornan hostiles y la línea entre lo natural y lo sobrenatural desaparece. Cada fragmento de vídeo desvela nuevas capas de horror, sumergiendo al espectador en un mundo laberíntico y desasosegante, donde la sensación de amenaza acecha en cada sombra y lo familiar se vuelve inquietantemente extraño.",
+    "director": [
+      "Kane Parsons"
+    ],
+    "actors": [
+      "Chiwetel Ejiofor",
+      "Renate Reinsve",
+      "Mark Duplass"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-313220/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-317554/",
+    "title": "Parthenope",
+    "genres": [
+      "Drama",
+      "Romántico"
+    ],
+    "plot": "La película cuenta la historia de Parthenope desde su nacimiento en 1950 hasta el presente, una travesía femenina que está impregnada de una pasión inquebrantable por la libertad, Nápoles, y los distintos rostros del amor. A través de momentos como el verano perfecto en Capri y la despreocupación de la juventud, que termina en desilusión, Parthenope explora las complejidades de los amores verdaderos, inútiles e indecibles, mientras se enfrenta a las ironías trágicas y melancolías de los napolitanos.",
+    "director": [
+      "Paolo Sorrentino"
+    ],
+    "actors": [
+      "Celeste Dalla Porta",
+      "Stefania Sandrelli",
+      "Gary Oldman"
+    ],
+    "rating": "3,1",
+    "type": "pelicula",
+    "country": "Francia,\n                                    \n                     Italia",
+    "year": "2025",
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-317554/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-10294/",
+    "title": "Tú a Londres y yo a California",
+    "genres": [
+      "Comedia",
+      "Familia"
+    ],
+    "plot": "Esta comedia nos lleva a conocer a unas gemelas encantadoras y alocadas.Separadas al nacer sin saberlo, vuelven a juntarse por casualidad en un campamento de verano. Asombradas por la noticia de tener una hermana gemela, deciden cambiarse los papeles y así a conocer a sus respectivos padres. Al mismo tiempo intentarán reconciliar a sus padres, algo que les será difícil ya que el padre está comprometido con otra mujer…",
+    "director": [
+      "Nancy Meyers"
+    ],
+    "actors": [
+      "Natasha Richardson",
+      "Lindsay Lohan",
+      "Dennis Quaid"
+    ],
+    "rating": "4,0",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "1998",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-10294/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-863/",
+    "title": "El resplandor",
+    "genres": [
+      "Terror",
+      "Suspense"
+    ],
+    "plot": "Basada en la novela del maestro del terror Stephen King, El Resplandor tiene como protagonista a Jack Torrance (Jack Nicholson), un hombre casado y con un hijo, Danny (Danny Lloyd). Un día, Jack acepta un puesto como vigilante en un aislado hotel. El trabajo consiste en pasar todo el invierno allí con su familia, cuidando del recinto. La familia se muda allí, pero lo que no sospechan es que sus vidas van a cambiar en cuanto crucen la puerta del hotel.Poco a poco, el pequeño Danny empieza a percibir algo extraño, fuerzas oscuras que habitan en el hotel y que comienzan a ejercer su poder y su influencia sobre sus habitantes. Y es que el lugar está marcado por un pasado de violencia y destrucción. Jack comienza a perder el juicio de forma progresiva, y acabará convirtiéndose en un psicópata violento dispuesto a asesinar a su familia. Tan solo Danny, poseedor de un don conocido como &quot;el Resplandor&quot; podrá impedirlo.",
+    "director": [
+      "Stanley Kubrick"
+    ],
+    "actors": [
+      "Jack Nicholson",
+      "Shelley Duvall",
+      "Danny Lloyd"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "Gran Bretaña,\n                                    \n                     EE.UU.",
+    "year": "1980",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-863/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-262273/",
+    "title": "Klaus",
+    "genres": [
+      "Animación"
+    ],
+    "plot": "Jesper es cartero. Como era el peor estudiante de la academia postal, le destinan a Smeerensburg, un gélido lugar más allá del Círculo Polar Ártico. Sus habitantes nunca envían cartas, de modo que Jesper está a punto de rendirse... hasta que encuentra a Klaus. Este misterioso fabricante de juguetes vive aislado en una cabaña repleta de juguetes hechos a mano. Ambos se se harán amigos mientras deciden traer de vuelta la alegría a Smeerensburg. Porque un verdadero acto de generosidad siempre genera otro. Esta original comedia navideña de animación sobre el origen de Papá Noel es el debut en la dirección del animador español Sergio Pablos, responsable de la idea original de las películas Gru, mi villano favorito (2010) y Smallfoot (2018). Escriben el libreto de la película Zach Lewis y Jim Mahoney, que también debutan como guionistas con este largometraje. El reparto de voces de la versión original está formado por los actores Jason Schwartzman (Mozart in the Jungle, El gran hotel Budapest), Rashida Jones (Parks and Recreation, El gran año), J.K. Simmons (Liga de la Justicia, El muñeco de nieve) y Joan Cusack (Descontroladas, El último tour). En la versión en castellano las voces son las de los actores Quim Gutiérrez (Abracadabra), Belén Cuesta (A pesar de todo) y Luis Tosar (Quien a hierro mata).",
+    "director": [
+      "Sergio Pablos"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     EE.UU.",
+    "year": "2019",
+    "actors": [
+      "Jason Schwartzman",
+      "Rashida Jones",
+      "J.K. Simmons"
+    ],
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-262273/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-126079/",
+    "title": "Hotel Transilvania",
+    "genres": [
+      "Animación",
+      "Comedia",
+      "Acción"
+    ],
+    "plot": "Los monstruos ya tienen un lugar para ir de vacaciones y descansar en paz. Este es el Hotel Transilvania, un terrorífico pero suntuoso lugar regentado por el mismísimo Conde Drácula (Adam Sandler, 'Jack y su gemela'). En este enclave no solo podemos encontrar a seres tan famosos como el Hombre Invisible (David Spade, 'Reglas de compromiso'), Cuasimodo (David Koechner, 'El reportero'), Frankenstein (Kevin James, 'Niños grandes'), la Momia (Cee-Lo), o el Hombre Lobo, sino que aquí también vive Mavis (Selena Gomez, 'Monte Carlo'), la hija de Drácula.La joven adolescente ha estado siempre superprotegida por su padre, quien intenta frenar a toda costa su espíritu aventurero mediante extrañas historias. El cometido de Drácula se cumple a la perfeccción, hasta que Jonathan (Andy Samberg, 'Dime con cuántos'), un chico humano de veintiún años, aparece de pronto en el hotel. El chico se enamora perdidamente de Mavis y comenzará a cortejarla, algo que al Príncipe de las Tinieblas le pondrá de muy mal humor.",
+    "director": [
+      "Genndy Tartakovsky"
+    ],
+    "rating": "4,2",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2012",
+    "actors": [
+      "Adam Sandler",
+      "Andy Samberg",
+      "Selena Gomez"
+    ],
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-126079/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-39187/",
+    "title": "El Señor de los Anillos: El retorno del Rey",
+    "genres": [
+      "Fantasía",
+      "Aventura"
+    ],
+    "plot": "El ejército de Sauron ha atacado Minas Tirith, la capital de Gondor. Una poderosa amenaza pone en peligro la paz del reino, antaño poderoso y que ahora necesita más que nunca a su rey. Ante esta situación límite, Aragorn se presenta como una figura clave para llevar al reino a la victoria pero, ¿será capaz de cumplir con su destino? Mientras tanto, Gandalf intentará contener a las fuerzas destructoras de Gondor y Théoden pedirá a los guerreros de Rohan que se unan al combate. Sin embargo, a pesar de su valor y lealtad, parece que las fuerzas de los Hombres no serán suficientes para derrotar a las inconmensurables legiones de enemigos que se ciernen sobre el reino.Cada victoria vendrá acompañada de grandes sacrificios y, a pesar de las pérdidas, la Comunidad continúara su batalla por sobrevivir hasta el final. Al mismo tiempo, sus miembros intentarán atraer la atención de Sauron para darle a Frodo la última oportunidad para completar su misión. A medida que atraviesa las tierras enemigas, el joven hobbit, acompañado por su fiel amigo Sam y el misterioso Gollum, tratará de evitar sucumbir a las continuas tentaciones del Anillo Único.",
+    "director": [
+      "Peter Jackson"
+    ],
+    "actors": [
+      "Sean Astin",
+      "Elijah Wood",
+      "Viggo Mortensen"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
+    "year": "2003",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-39187/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-292320/",
+    "title": "Mortal Kombat II",
+    "genres": [
+      "Acción",
+      "Aventura"
+    ],
+    "plot": "En esta nueva entrega, los campeones favoritos de los fans regresan al campo de batalla… y no lo hacen solos. A ellos se une Johnny Cage (Karl Urban), la legendaria estrella de acción convertida en guerrero, cuyo carisma y arrogancia esconden un valor tan letal como sus puños. Juntos, se ven arrastrados al torneo más brutal jamás concebido: un Mortal Kombat definitivo donde no hay segundas oportunidades.Tras los acontecimientos anteriores, la amenaza se intensifica cuando el despiadado emperador Shao Kahn decide romper todas las reglas y lanzar una ofensiva directa contra el Reino de la Tierra. Con ejércitos monstruosos, hechiceros oscuros y campeones corrompidos a su servicio, Shao Kahn busca aplastar a los defensores del planeta y absorber su mundo para ampliar su imperio.Mientras viejas rivalidades resurgen y nuevas alianzas se forjan a la fuerza, los luchadores deberán enfrentarse no solo a enemigos cada vez más poderosos, sino también a sus propios miedos, culpas y destinos. Cada combate será más sangriento que el anterior. Cada victoria tendrá un precio. Y cada derrota significará algo peor que la muerte.",
+    "director": [
+      "Simon McQuoid"
+    ],
+    "actors": [
+      "Karl Urban",
+      "Lewis Tan",
+      "Joe Taslim"
+    ],
+    "rating": "3,4",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "source": "web",
+    "source_query": "peliculas de romance\n",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-292320/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-111381/",
+    "title": "Viaje al Centro de la Tierra",
+    "genres": [
+      "Aventura",
+      "Fantasía",
+      "Ciencia ficción"
+    ],
+    "plot": "Trevor Anderson es un profesor de ciencias cuyas teorías radicales han empañado su reputación por completo.Durante una expedición en Islandia con su sobrino Sean y su hermosa guía regional, Hannah, encuentran una misteriosa cueva que les lleva a adentrarse en las profundidades de la Tierra, en las entrañas del planeta. Allí les espera un extraño paisaje lleno de criaturas terroríficas y un volcán a punto de entrar en erupción, por lo que deberán encontrar la forma de volver a la superficie antes de que sea demasiado tarde.",
+    "director": [
+      "Eric Brevig"
+    ],
+    "actors": [
+      "Brendan Fraser",
+      "Josh Hutcherson",
+      "Anita Briem"
+    ],
+    "rating": "3,5",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2008",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-111381/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-171223/",
+    "title": "El Secreto de Sus Ojos",
+    "genres": [
+      "Drama",
+      "Crimen",
+      "Romántico",
+      "Suspense"
+    ],
+    "plot": "Benjamin Espósito (Ricardo Darín) se ha retirado recientemente de su cargo en el Juzgado de lo Penal. Con bastante tiempo libre, ahora se dedica a escribir un libro. Benjamin utiliza su experiencia para contar una historia trágica que ocurrió en 1974.En aquella época el Departamento de Justicia para el que trabajaba, fue designado para investigar la violación y posterior asesinato de una joven. Gracias a ello, Benjamin puede ponerse en contacto con Ricardo Morales (Pablo Rago), marido de la fallecida y a quien promete ayudar a encontrar al culpable. Para su labor de investigación, cuenta con la ayuda de su gran amigo, Pablo Sandoval (Guillermo Francella), y de su jefa, Irene Menéndez Hastings (Soledad Villamil). Benjamin acaba más involucrado de lo que creía en el relato.",
+    "director": [
+      "Juan José Campanella"
+    ],
+    "actors": [
+      "Ricardo Darín",
+      "Soledad Villamil",
+      "Pablo Rago"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "España,\n                                    \n                     Argentina",
+    "year": "2009",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-171223/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-13892/",
+    "title": "Seven",
+    "genres": [
+      "Crimen",
+      "Suspense",
+      "Drama"
+    ],
+    "plot": "Somerset es un veterano detective que se encuentra a punto de jubilarse y que conoce al joven policia Mills. Juntos deberán investigar el asesinato de un hombre obeso que ha sido atado y obligado a comer hasta la muerte. Los crímenes se suceden mientras los dos detectives muestran sus talantes opuestos, uno paciente y racional, y el joven más impetuoso.Pronto averiguan que los crímenes son obra de la misma persona, ya que ésta deja numerosas anotaciones procedentes de diversas lecturas que ha ido realizando de una serie de libros de temática religiosa. De este modo, Somerset y Mills no tardan mucho en descubrir que la serie de asesinatos está inspirada en los siete pecados capitales: cada uno de los muertos había incurrido en éste u otro pecado, y había sufrido un terrible castigo en consonancia. La pareja de detectives, pese a sus grandes diferencias, tendrá que trabajar duro para conseguir detener a un asesino fanático y meticuloso que siempre parece ir un paso por delante de ellos, pues los asesinatos no dejan de sucederse y la lista de pecados se va acortando dramáticamente. ",
+    "director": [
+      "David Fincher"
+    ],
+    "actors": [
+      "Brad Pitt",
+      "Morgan Freeman",
+      "Gwyneth Paltrow"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "1995",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-13892/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-39186/",
+    "title": "El Señor de los Anillos: Las dos torres",
+    "genres": [
+      "Aventura",
+      "Fantasía"
+    ],
+    "plot": "Tras la muerte de Boromir y la desaparición de Gandalf, la Comunidad se divide en tres. Perdidos en las colinas de Emyn Muil, Frodo y Sam descubren que les persigue Gollum, una criatura volátil corrompida por el Anillo Único. Éste promete a los hobbits conducirles hasta la Puerta Negra de Mordor. Aragorn, Legolas y Gimli atraviesan la Tierra Media y llegan a Rohan, el reino de Théoden. El anciano rey, manipulado por el espía de Saruman, el siniestro Lengua de Serpiente, ha caído en las redes del malvado mago. Éowyn, la sobrina del rey, descubre en Aragorn a todo un líder. Mientras tanto, los hobbits Merry y Pippin, que estaban prisioneros de los Uruk-hai, han escapado y descubren en el misterioso Bosque de Fangorn a un aliado inesperado: Bárbol, guardián de los árboles y representante de un antiguo pueblo vegetal que Saruman había diezmado…",
+    "director": [
+      "Peter Jackson"
+    ],
+    "actors": [
+      "Elijah Wood",
+      "Sean Astin",
+      "Viggo Mortensen"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
+    "year": "2002",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-39186/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-115362/",
+    "title": "El caballero oscuro",
+    "genres": [
+      "Acción",
+      "Suspense"
+    ],
+    "plot": "Después de derrotar a la Orden de las Sombras y frustrar al jefe de la mafia Carmine Falcone en 'Batman Begins', Bruce Wayne vuelve a enfundarse el traje del hombre murciélago para combatir el crimen en Gotham.Con Falcone fuera, el mafioso Salvatore Maroni se ha hecho con el control en la ciudad y parece que la lucha de Batman frente a los criminales será interminable. Por suerte, la ciudad cuenta ahora con Harvey Dent, un nuevo Fiscal del Distrito caracterizado por su mano dura contra el crimen, lo que da un aire de esperanza a Gotham y permite que Bruce se centre en Rachel Dawes, el amor de su vida y la única que conoce su verdadera identidad.Sin embargo, la llegada de un nuevo villano a la ciudad destruirá todos los planes de Batman. Se trata de El Joker, un psicópata retorcido y sádico, con una morbosa fascinación por todo lo que rodea al murciélago. Pronto comenzará a sembrar el pánico y a causar estragos en Gotham, convirtiéndose en el peor enemigo posible para El caballero oscuro.",
+    "director": [
+      "Christopher Nolan"
+    ],
+    "actors": [
+      "Christian Bale",
+      "Heath Ledger",
+      "Aaron Eckhart"
+    ],
+    "rating": "4,6",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
+    "year": "2008",
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-115362/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-132874/",
+    "title": "El caballero oscuro. La leyenda renace",
+    "genres": [
+      "Acción",
+      "Suspense"
+    ],
+    "plot": "Tercera entrega de la trilogía dirigida por Christopher Nolan, que comenzó con Batman Begins (2005), siguió con El caballero oscuro (2008) y ahora finaliza con El caballero oscuro. La leyenda renace. En esta aventura, el superhéroe Batman (Christian Bale, The Fighter), deberá enfrentarse a Bane (Tom Hardy, Bronson), un poderoso villano que acaba de escaparse de la cárcel y que liderará una tropa de maleantes fugados de la prisión de Arkham. Bane asediará la ciudad de Gotham y Batman tendrá que unirse a las fuerzas del orden para detener su avance. Además, el Hombre Murciélago tendrá que verse las caras con otro contrincante, en este caso femenina, la fiera Catwoman (Anne Hathaway, El diablo viste de Prada). En esta nueva entrega, además de los rostros familiares de Michael Caine (en el papel del mayordomo Alfred) y Gary Oldman (como Jim Gordon), se suman al reparto dos actores que estuvieron presentes en la anterior película de Nolan, Origen, Joseph Gordon-Levitt y Marion Cotillard, además de Morgan Freeman (Invictus) y Juno Temple (Killer Joe).",
+    "director": [
+      "Christopher Nolan"
+    ],
+    "actors": [
+      "Christian Bale",
+      "Gary Oldman",
+      "Tom Hardy"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
+    "year": "2012",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-132874/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-123534/",
+    "title": "Cómo entrenar a tu dragón",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Familia"
+    ],
+    "plot": "Con una nominación al Oscar para la Mejor Película de Animación de 2010, esta comedia de aventuras y fantasía cuenta en su versión original con las voces de actores de la talla de Gerard Butler (300) y David Tennant (Doctor Who). Hipo es un adolescente vikingo que no encaja con el estereotipo de su pueblo de rudos cazadores de dragones: no sabe lanzar un hacha, no sabe usar una espada y es demasiado pequeño y flacucho para luchar. Sin embargo, empeñado en hacerse valer, sale en busca de su primer dragón... pero lo que encuentra no se parece en nada a las historias que ha oído durante toda su vida acerca de esos &quot;terribles monstruos&quot;. Conocerá a Desdentao, un ejemplar de los legendarios Furia Nocturna, una raza que se creía extinta. Después de dispararle se dará cuenta de que los dragones no son las bestias asesinas que él creía e iniciará una relación de amistad con el dragón que pretendía cazar en un principio.Basada en el libro infantil de Cressida Cowell, 'Cómo Entrenar a tu Dragón' es un canto a la amistad a través de las diferencias y los prejuicios.",
+    "director": [
+      "Chris Sanders",
+      "Dean DeBlois"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2010",
+    "actors": [
+      "Jay Baruchel",
+      "Gerard Butler",
+      "America Ferrera"
+    ],
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-123534/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-254359/",
+    "title": "Wolfwalkers",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Familia",
+      "Fantasía"
+    ],
+    "plot": "La joven Robyn viaja a Irlanda con su padre para participar en una cacería de lobos. Sus planes se irán al traste cuando conozca a Mebh, una misteriosa joven que habita en el bosque. Sobre la enigmática joven se cierne un terrible rumor: que ella y su tribu se transforman en licántropos al caer la noche.",
+    "director": [
+      "Tomm Moore",
+      "Ross Stewart"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "Irlanda,\n                                    \n                     EE.UU.,\n                                    \n                     Luxemburgo",
+    "year": "2020",
+    "actors": [
+      "Honor Kneafsey",
+      "Sean Bean",
+      "Simon McBurney"
+    ],
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-254359/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-26832/",
+    "title": "Los otros",
+    "genres": [
+      "Fantasía",
+      "Drama",
+      "Terror"
+    ],
+    "plot": "Película de terror ambientada en la isla de Jersey durante los años cuarenta, justo tras la devastadora etapa vivida en la Segunda Guerra Mundial. Grace Stewart (Nicole Kidman, Bajo Amenaza), una ferviente católica, decide trasladarse a un misterioso caserón con sus dos hijos, Anne (Alakina Mann)  y Nicholas (James Bentley), a la espera del regreso de su marido. Los niños padecen una extraña enfermedad que les impide llevar una vida normal. Sufren fotofobia y no pueden ver la luz del sol, por lo que sus vidas se rigen por normas muy estrictas impuestas para protegerles al máximo. Viven en penumbra, a la luz de las velas, con puertas y ventanas cerradas. Un día, Grace decide contratar a tres nuevos sirvientes, una niñera, un jardinero y una joven muda,  y empiezan a sucederse extraños fenómenos que perturban a la familia. Sospecha que no están solos y sus hijos desarrollan un extraño comportamiento. Su escepticismo cambiará y tratará descubrir que está sucediendo y quiénes son 'los otros'.",
+    "director": [
+      "Alejandro Amenábar"
+    ],
+    "actors": [
+      "Nicole Kidman",
+      "Elaine Cassidy",
+      "Christopher Eccleston"
+    ],
+    "rating": "4,2",
+    "type": "pelicula",
+    "country": "Francia,\n                                    \n                     EE.UU.,\n                                    \n                     Italia,\n                                    \n                     España",
+    "year": "2001",
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-26832/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-275210/",
+    "title": " Capitán América: Brave New World",
+    "genres": [
+      "Acción",
+      "Aventura",
+      "Fantasía"
+    ],
+    "plot": "Tras reunirse con el nuevo presidente de Estados Unidos, Thaddeus Ross, Sam Wilson, ahora el Capitán América, se ve envuelto en un grave incidente internacional. A medida que la tensión escala, Sam debe descubrir la verdad detrás de una conspiración global que amenaza con desestabilizar al mundo entero.Mientras intenta detener a la mente maestra detrás del complot, se enfrenta a desafíos que pondrán a prueba su liderazgo, sus ideales y su papel como símbolo de esperanza. Una nueva era comienza en la cuarta entrega de la saga del Capitán América.",
+    "director": [
+      "Julius Onah"
+    ],
+    "actors": [
+      "Anthony Mackie",
+      "Harrison Ford",
+      "Danny Ramirez"
+    ],
+    "rating": "2,7",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2025",
+    "source": "web",
+    "source_query": "series de romance",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-275210/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-313256/",
+    "title": "Toy Story 5",
+    "genres": [
+      "Animación",
+      "Aventura",
+      "Comedia",
+      "Familia"
+    ],
+    "plot": "Quinta entrega de la saga Toy Story en la que volveremos a ver las aventuras de Buzz, Woody y el resto de juguetes que en su día fueron la diversión del pequeño Andy y que ahora pertenecen a la pequeña Bonnie. Estas pequeñas criaturas de plástico vueven a vivir aventuras y a meterse en una cantidad ingente de problemas, que harán las delicias de mayores y pequeños.",
+    "director": [
+      "Andrew Stanton"
+    ],
+    "rating": "3,2",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "actors": [
+      "Tom Hanks",
+      "Tim Allen",
+      "Joan Cusack"
+    ],
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-313256/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-6641/",
+    "title": "El silencio de los corderos",
+    "genres": [
+      "Suspense",
+      "Crimen",
+      "Terror"
+    ],
+    "plot": "Esta película de suspense nos lleva a vivir una terrorífica historia que comienza con una serie de asesinatos de unas adolescentes en Alabama.Clarisse (Jodie Foster), una joven policía con un currículum intachable, sigue la pista del criminal para poder localizarle. Para ello pide ayuda a Hannibal Lecter (Anthony Hopkins), un sádico psiquiatra que se encuentra encarcelado en una prisión de gran seguridad.",
+    "director": [
+      "Jonathan Demme"
+    ],
+    "actors": [
+      "Anthony Hopkins",
+      "Jodie Foster",
+      "Scott Glenn"
+    ],
+    "rating": "4,5",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "1991",
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-6641/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-326680/",
+    "title": "Memorias de un caracol",
+    "genres": [
+      "Animación",
+      "Drama"
+    ],
+    "plot": "En la Australia de la década de 1970, la vida de Grace, una niña algo solitaria e inadaptada, está profundamente afectada por las dificultades y la pérdida. Tras la disolución de su familia y la separación de su hermano gemelo, Gilbert, Grace encuentra consuelo en la colección de adornos de caracoles, una actividad que le ayuda a calmar su soledad. Su vida cambia de manera radical, inesperada y esperanzadora cuando entabla una amistad con Pinky, una anciana algo excéntrica que la motiva a abrirse al mundo y a dejar atrás las preocupaciones que perturban su casa y su cabeza.",
+    "director": [
+      "Adam Elliot"
+    ],
+    "rating": "3,9",
+    "type": "pelicula",
+    "country": "Australia",
+    "year": "2024",
+    "actors": [
+      "Sarah Snook",
+      "Jacki Weaver",
+      "Eric Bana"
+    ],
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-326680/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-256880/",
+    "title": "Spider-Man: No Way Home",
+    "genres": [
+      "Acción",
+      "Aventura",
+      "Fantasía"
+    ],
+    "plot": "Después de que Mysterio desvelara la identidad de Spider-Man a todo el mundo en Lejos de casa, Peter Parker (Tom Holland), desesperado por volver a la normalidad y recuperar su anterior vida, pide ayuda a Doctor Strange para enmendar tal acción. El Hechicero Supremo de Marvel accede a ayudar al joven Hombre Araña, sin embargo, algo sale mal y el multiverso se convierte en la mayor amenaza hasta el momento. ",
+    "director": [
+      "Jon Watts"
+    ],
+    "actors": [
+      "Tom Holland",
+      "Zendaya",
+      "Benedict Cumberbatch"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2021",
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-256880/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-196960/",
+    "title": "Del revés (Inside Out)",
+    "genres": [
+      "Animación",
+      "Comedia",
+      "Familia"
+    ],
+    "plot": "El paso del tiempo puede ser un camino complicado. También lo es para la joven Riley Anderson cuando, con sólo 11 años, tiene que dejar atrás su vida en el Medio Oeste y mudarse a San Francisco. Como el resto de las personas, la vida de Riley se guía por sus emociones: Alegría, Miedo, Ira, Asco y Tristeza. Todas ellas viven en el Cuartel General, el centro de control dentro de su cabeza desde donde ayudan y dirigen los comportamientos de la chica en su día a día. Aunque Alegría intenta dominar los sentimientos para mantener a la niña en un estado de felicidad, Tristeza comienza a cambiar las cosas y a hacer que la melancolía se extienda. Una serie de sucesos hace que las dos emociones salgan accidentalmente del Cuartel General y viajen por la mente de Riley mientras tratan de encontrar el camino de vuelta.",
+    "director": [
+      "Pete Docter"
+    ],
+    "rating": "4,4",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2015",
+    "actors": [
+      "Amy Poehler",
+      "Bill Hader",
+      "Mindy Kaling"
+    ],
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-196960/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-189195/",
+    "title": "Mortadelo y Filemón contra Jimmy el cachondo",
+    "genres": [
+      "Comedia",
+      "Familia",
+      "Animación"
+    ],
+    "plot": "Los dos agentes más divertidos de la T.I.A., creados por el dibujante Francisco Ibáñez, vuelven de nuevo a la gran pantalla. Esta vez tienen que salvar al mundo de un ataque tan inusitado como desternillante.La humanidad al completo ha sido invadida por un ataque de risa muy contagioso que amenaza el equilibrio de las instituciones. Bancos, colegios, ministerios, ayuntamientos, cafeterías e incluso los mismo elefantes, todos han sido afectados por esta plaga y nadie puede dejar de reír para ponerse a sus labores. El culpable es Jimmy el Cachondo, un peculiar y malvado personaje que, además de hacer reir sin parar, se pasea por la ciudad a bordo de su helicóptero cargado con una bomba de neutrones picantes que puede explotar en cualquier momento. Los únicos capaces de acabar con el tronchante peligro son nuestros agentes favoritos, Mortadelo y Filemón.",
+    "director": [
+      "Javier Fesser"
+    ],
+    "rating": "3,7",
+    "type": "pelicula",
+    "country": "España",
+    "year": "2014",
+    "actors": [
+      "Karra Elejalde",
+      "Janfri Topera",
+      "Gabriel Chame"
+    ],
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-189195/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000015619/",
+    "title": "Couture (Alta costura)",
+    "genres": [
+      "Drama"
+    ],
+    "plot": "Maxine es una cineasta estadounidense que llega a París para cubrir la Semana de la Moda, pero pronto su viaje se transforma en una experiencia de vida o muerte. En la capital francesa, su camino se cruza con el de otras dos mujeres, cuyas vidas y secretos generan situaciones inesperadas y tensas.Entre el glamour de la moda y los desafíos personales, Maxine deberá enfrentarse a decisiones cruciales que pondrán a prueba su valentía, intuición y capacidad para sobrevivir en un entorno donde nada es lo que parece.",
+    "director": [
+      "Alice Winocour"
+    ],
+    "actors": [
+      "Angelina Jolie",
+      "Ella Rumpf",
+      "Anyier Anei"
+    ],
+    "type": "pelicula",
+    "country": "Francia,\n                                    \n                     EE.UU.",
+    "year": "2025",
+    "rating": null,
+    "source": "web",
+    "source_query": "series de detectives",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000015619/"
   }
 ]

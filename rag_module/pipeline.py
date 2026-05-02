@@ -1,6 +1,8 @@
 from rag_module.retriever_wrapper import RetrieverWrapped
 from rag_module.generator import OllamaGenerator
 from rag_module.config import RAGConfig
+from recommendation_module.recommendation import RecommendationEngine
+from recommendation_module.profile_store import load_user
 
 class RAGPipeline:
 
@@ -10,6 +12,8 @@ class RAGPipeline:
         self.temperature = config.temperature
         self.top_k = config.top_k
         self.max_tokens = config.max_tokens
+        self.recommender = RecommendationEngine()
+        self.default_user_id = None
 
     def build_context(self, docs):
         """Construir contexto desde documentos recuperados."""
@@ -43,17 +47,28 @@ PREGUNTA: {query}
 
 Recomienda las opciones más relevantes, explica brevemente por qué cada una encaja con la pregunta y sé específico."""
 
-    def query(self, question):
-       docs = self.retriever.search_with_web_expansion(question, top_k=self.top_k)
+    def query(self, question, user_id: str | None = None):
+        docs = self.retriever.search_with_web_expansion(question, top_k=self.top_k)
+        if not docs:
+             return "No encontré resultados."
 
-       if not docs:
-         return "No encontré resultados."
+             # try to load persistent user profile (if any)
+        uid = user_id if user_id is not None else self.default_user_id
+        user = load_user(uid) if uid else None
 
-       context = self.build_context(docs)
-       prompt = self.build_prompt(question, context)
-       response = self.generator.generate(
+        try:
+            personalized = self.recommender.personalize_results(user, docs, top_k=self.top_k)
+            if personalized:
+                docs = personalized
+        except Exception:
+            # fallback to original docs on any error
+            pass
+
+        context = self.build_context(docs)
+        prompt = self.build_prompt(question, context)
+        response = self.generator.generate(
            prompt,
            temperature=self.temperature,
            max_tokens=self.max_tokens,
         )
-       return response   
+        return response   

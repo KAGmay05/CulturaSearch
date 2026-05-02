@@ -5,6 +5,10 @@ import html
 import streamlit as st
 
 from neural_based_model.neural_retriever import NeuralRetriever, SearchResult
+from recommendation_module.profile_store import load_user, save_user
+from recommendation_module.user_profile import User
+from recommendation_module.recommendation import RecommendationEngine, recommend_for_user
+from auth import authenticate
 
 
 st.set_page_config(
@@ -156,11 +160,12 @@ def inject_styles() -> None:
 
             .result-card {
                 margin-top: 1rem;
-                border: 1px solid var(--line);
-                border-radius: 24px;
-                padding: 1.05rem 1.1rem;
-                background: linear-gradient(180deg, rgba(17, 27, 48, 0.88), rgba(9, 15, 28, 0.82));
-                box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24);
+                border: 1px solid var(--line) !important;
+                border-radius: 24px !important;
+                padding: 1.05rem 1.1rem !important;
+                background: linear-gradient(180deg, rgba(17, 27, 48, 0.98), rgba(9, 15, 28, 0.96)) !important;
+                box-shadow: 0 16px 44px rgba(0, 0, 0, 0.24) !important;
+                color: var(--text) !important;
             }
 
             .result-head {
@@ -234,10 +239,10 @@ def inject_styles() -> None:
             }
 
             .snippet {
-                color: var(--text);
-                opacity: 0.92;
-                line-height: 1.72;
-                font-size: 0.96rem;
+                color: var(--text) !important;
+                opacity: 0.94 !important;
+                line-height: 1.72 !important;
+                font-size: 0.96rem !important;
             }
 
             .chip-row {
@@ -269,11 +274,29 @@ def inject_styles() -> None:
             }
 
             .source-link {
-                display: inline-flex;
-                margin-top: 0.35rem;
-                color: #9be7db;
-                text-decoration: none;
-                font-weight: 600;
+                display: inline-flex !important;
+                margin-top: 0.35rem !important;
+                color: #9be7db !important;
+                text-decoration: none !important;
+                font-weight: 600 !important;
+            }
+
+            /* Ensure all text inside the result card is visible even if Streamlit wraps markup */
+            .result-card, .result-card * {
+                color: var(--text) !important;
+            }
+
+            /* Style primary buttons (make color persistent, not only on hover) */
+            .stButton>button {
+                background: var(--accent) !important;
+                color: #072427 !important;
+                border: none !important;
+                box-shadow: none !important;
+            }
+            .stButton>button:hover, .stButton>button:focus {
+                background: var(--accent) !important;
+                color: #072427 !important;
+                opacity: 0.95 !important;
             }
 
             .source-link:hover {
@@ -344,18 +367,24 @@ def render_metric(label: str, value: str) -> str:
 
 
 def render_result_card(item: SearchResult) -> None:
-    title = html.escape(item.title or "Sin título")
-    media_type = html.escape(item.media_type or "desconocido")
-    kind = content_kind(item.media_type)
-    summary = html.escape(snippet_text(item.plot))
-    score_pct = max(0.0, min(100.0, float(item.score) * 100.0))
-    score_value = f"{item.score:.3f}"
-    neural_value = f"{item.neural_score:.3f}"
-    lexical_value = f"{item.lexical_score:.2f}"
-    rerank_value = f"{item.rerank_score:.3f}"
-    url = item.url.strip()
+    # defensivas: algunos campos pueden ser None o faltar
+    raw_title = getattr(item, "title", None) or "Sin título"
+    title = html.escape(raw_title)
+    raw_media_type = getattr(item, "media_type", None) or "desconocido"
+    media_type = html.escape(raw_media_type)
+    kind = content_kind(raw_media_type)
+    raw_plot = getattr(item, "plot", None) or getattr(item, "description", None) or ""
+    summary = html.escape(snippet_text(raw_plot))
+    score_val = float(getattr(item, "score", 0.0) or 0.0)
+    score_pct = max(0.0, min(100.0, score_val * 100.0))
+    score_value = f"{score_val:.3f}"
+    neural_value = f"{float(getattr(item, 'neural_score', 0.0) or 0.0):.3f}"
+    lexical_value = f"{float(getattr(item, 'lexical_score', 0.0) or 0.0):.2f}"
+    rerank_value = f"{float(getattr(item, 'rerank_score', 0.0) or 0.0):.3f}"
+    url = (getattr(item, "url", "") or "").strip()
+    safe_href = html.escape(url)
     source_link = (
-        f'<a class="source-link" href="{html.escape(url)}" target="_blank" rel="noopener noreferrer">Abrir fuente original</a>'
+        f'<a class="source-link" href="{safe_href}" target="_blank" rel="noopener noreferrer">Abrir fuente original</a>'
         if url
         else ""
     )
@@ -397,6 +426,96 @@ def render_result_card(item: SearchResult) -> None:
         """,
         unsafe_allow_html=True,
     )
+    
+    # El botón marca el resultado como clicado. usar key estable y segura
+    col1, col2 = st.columns([1, 5])
+    with col1:
+        # clave segura: usar rank si existe, sino hash de la URL
+        rank_val = getattr(item, 'rank', None)
+        if rank_val is None:
+            key_id = f"click_{abs(hash(url))}"
+        else:
+            key_id = f"click_{rank_val}_{abs(hash(url))}"
+
+        if st.button("🔗 Abrí este resultado", key=key_id, use_container_width=True):
+            user_profile = st.session_state.get("user_profile")
+            if user_profile is None:
+                st.warning("Inicia sesión para guardar tus clics")
+            else:
+                try:
+                    if not url:
+                        st.warning("No hay URL disponible para este resultado")
+                    else:
+                        # registrar el click
+                        user_profile.register_click(url)
+
+                        # intentar resolver metadata completa desde el retriever
+                        try:
+                            retriever = get_retriever()
+                            doc_meta = retriever._resolve_result_document(item)
+                        except Exception:
+                            doc_meta = None
+
+                        # actualizar tipo según metadata si está disponible
+                        if doc_meta:
+                            doc_type = doc_meta.get('type') or doc_meta.get('media_type') or raw_media_type
+                        else:
+                            doc_type = raw_media_type
+
+                        media_type_lower = (doc_type or '').lower()
+                        if "serie" in media_type_lower:
+                            user_profile.add_type_preference("serie")
+                        elif "pel" in media_type_lower or "film" in media_type_lower:
+                            user_profile.add_type_preference("película")
+
+                        # extraer géneros desde metadata preferentemente
+                        genres = []
+                        if doc_meta:
+                            genres = doc_meta.get('genres') or []
+                        if not genres:
+                            # fallback a atributo del resultado (raro si no existe)
+                            genres = getattr(item, 'genres', []) or []
+
+                        # normalizar si viene como string
+                        if isinstance(genres, str):
+                            genres = [g.strip() for g in genres.split(',') if g.strip()]
+
+                        for genre in genres:
+                            try:
+                                user_profile.add_genre_preference(genre)
+                            except Exception:
+                                continue
+
+                        save_user(user_profile)
+                        st.success(f"✅ '{title}' guardado como clicado")
+                except Exception as e:
+                    st.error(f"Error guardando clic: {e}")
+
+
+def track_viewed_results(results: list[SearchResult]) -> None:
+    """Registra como vistas las URLs que se muestran en pantalla."""
+    user_profile = st.session_state.get("user_profile")
+    if user_profile is None:
+        return
+
+    changed = False
+    for item in results:
+        url = (getattr(item, 'url', '') or '').strip()
+        if not url:
+            continue
+        try:
+            before = len(user_profile.viewed_urls)
+            user_profile.register_view(url)
+            if len(user_profile.viewed_urls) > before:
+                changed = True
+        except Exception:
+            continue
+
+    if changed:
+        try:
+            save_user(user_profile)
+        except Exception:
+            pass
 
 
 def run_query(
@@ -410,7 +529,15 @@ def run_query(
     retriever = get_retriever()
 
     if use_web_expansion:
-        return retriever.search_with_web_expansion(
+        results = retriever.search_with_web_expansion(
+            query=query,
+            top_k=top_k,
+            candidate_k=candidate_k,
+            alpha=alpha,
+            rerank_weight=rerank_weight,
+        )
+    else:
+        results = retriever.search_advanced(
             query=query,
             top_k=top_k,
             candidate_k=candidate_k,
@@ -418,26 +545,74 @@ def run_query(
             rerank_weight=rerank_weight,
         )
 
-    return retriever.search_advanced(
-        query=query,
-        top_k=top_k,
-        candidate_k=candidate_k,
-        alpha=alpha,
-        rerank_weight=rerank_weight,
+    # Aplicar personalización si hay un usuario logueado
+    user_profile = st.session_state.get("user_profile")
+    if user_profile is not None and results:
+        try:
+            recommender = RecommendationEngine()
+            personalized = recommender.personalize_results(user_profile, results, top_k=top_k)
+            if personalized:
+                results = personalized
+        except Exception as e:
+            # Si hay error en personalización, usar resultados originales
+            pass
+
+    return results
+
+
+def show_login_page() -> None:
+    """Pantalla de login con diseño consistente."""
+    inject_styles()
+
+    st.markdown(
+        """
+        <section class="hero" style="max-width: 480px; margin: 3rem auto;">
+            <div class="eyebrow">Inicio de sesión · CulturaSearch</div>
+            <h1 style="font-size: 2.5rem;">Ingresa a tu cuenta</h1>
+            <p>Accede para personalizar tus búsquedas y recibir recomendaciones adaptadas a tu gusto.</p>
+        </section>
+        """,
+        unsafe_allow_html=True,
     )
 
+    st.markdown("<div style='height: 2rem;'></div>", unsafe_allow_html=True)
 
-def main() -> None:
-    inject_styles()
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        user_id = st.text_input("👤 Usuario", placeholder="ej: alice", key="login_user_id")
+        password = st.text_input("🔑 Contraseña", placeholder="ej: 1234", type="password", key="login_password")
+        
+        if st.button("Ingresar", type="primary", use_container_width=True):
+            if not user_id or not password:
+                st.error("⚠️ Por favor completa usuario y contraseña")
+            else:
+                success, user_name = authenticate(user_id, password)
+                if success:
+                    st.session_state.user_id = user_id
+                    st.session_state.user_name = user_name
+                    st.session_state.user_profile = load_user(user_id)
+                    if st.session_state.user_profile is None:
+                        st.session_state.user_profile = User(user_id)
+                    save_user(st.session_state.user_profile)
+                    st.success(f"✅ ¡Bienvenido, {user_name}!")
+                    st.rerun()
+                else:
+                    st.error("❌ Usuario o contraseña inválido")
+
+
+def show_app() -> None:
+    """Pantalla principal de la app."""
+    user_name = st.session_state.get("user_name", "Usuario")
+    user_id = st.session_state.get("user_id", "")
 
     if "search_query" not in st.session_state:
         st.session_state.search_query = ""
 
     st.markdown(
-        """
+        f"""
         <section class="hero">
             <div class="eyebrow">Interfaz visual de recuperación · CulturaSearch</div>
-            <h1>Busca películas y series con una interfaz clara, moderna y orientada a relevancia.</h1>
+            <h1>Hola, {html.escape(user_name)}. Busca películas y series personalizadas para ti.</h1>
             <p>
                 Escribe consultas en lenguaje natural, activa expansión web cuando quieras ampliar el corpus y revisa
                 los resultados en tarjetas ordenadas por importancia. Cada resultado muestra el score final, la señal
@@ -450,7 +625,17 @@ def main() -> None:
 
     st.markdown("<div style='height: 1rem;'></div>", unsafe_allow_html=True)
 
+    # (La sección de recomendaciones sin query se muestra más abajo, junto al panel de búsqueda)
+
     with st.sidebar:
+        st.markdown(
+            f'<div style="font-size: 0.9rem; color: rgba(246, 247, 251, 0.72); margin-bottom: 1rem; padding: 0.6rem; background: rgba(82, 214, 197, 0.08); border-radius: 10px;"><strong>👤 Sesión:</strong><br/>{html.escape(user_name)} ({html.escape(user_id)})</div>',
+            unsafe_allow_html=True,
+        )
+        if st.button("🚪 Cerrar sesión", use_container_width=True):
+            st.session_state.clear()
+            st.rerun()
+        
         st.markdown('<div class="control-panel">', unsafe_allow_html=True)
         st.markdown('<div class="control-title">Panel de consulta</div>', unsafe_allow_html=True)
         st.markdown(
@@ -495,9 +680,41 @@ def main() -> None:
                     rerank_weight=rerank_weight,
                 )
 
+            # register search in persistent profile and save
+            user_profile = st.session_state.get("user_profile")
+            try:
+                user_profile.register_search(query)
+                save_user(user_profile)
+            except Exception:
+                pass
+
+            # Las búsquedas mostradas se consideran vistas.
+            track_viewed_results(results)
+
             st.session_state.last_query = query
             st.session_state.last_results = results
             st.session_state.last_web_mode = use_web_expansion
+
+    # Sección: ¿No sabes qué buscar? — recomendaciones basadas en tu perfil (después de los controles)
+    user_profile = st.session_state.get("user_profile")
+    if user_profile is not None:
+        st.markdown(
+            """
+            <div style="border:1px solid rgba(255,255,255,0.06); padding:0.9rem; border-radius:12px; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); margin:0.8rem 0;">
+                <strong>¿No sabes qué buscar?</strong>
+                <div style="color: rgba(246,247,251,0.72); margin-top:0.45rem;">Te mostramos recomendaciones automáticas basadas en lo que ya te gusta. Pulsa el botón y verás sugerencias sin escribir nada.</div>
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+        if st.button("Ver recomendaciones para mí", use_container_width=True, key="show_personal_recs"):
+            with st.spinner("Generando recomendaciones personalizadas..."):
+                recs = recommend_for_user(user_profile, top_k=top_k)
+                # marcar como vistas y guardar
+                track_viewed_results(recs)
+                st.session_state.last_query = "Recomendaciones para ti"
+                st.session_state.last_results = recs
+                st.session_state.last_web_mode = False
 
     results = st.session_state.get("last_results", [])
     last_query = st.session_state.get("last_query", "")
@@ -556,6 +773,15 @@ def main() -> None:
             """,
             unsafe_allow_html=True,
         )
+
+
+def main() -> None:
+    inject_styles()
+    # Verificar si hay sesión activa
+    if "user_id" not in st.session_state:
+        show_login_page()
+    else:
+        show_app()
 
 
 if __name__ == "__main__":
