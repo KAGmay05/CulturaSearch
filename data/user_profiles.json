@@ -1,0 +1,52 @@
+{
+  "streamlit_user": {
+    "user_id": "streamlit_user",
+    "search_history": [],
+    "clicked_urls": [],
+    "viewed_urls": [],
+    "genre_preferences": {},
+    "type_preferences": {},
+    "term_preferences": {}
+  },
+  "alice": {
+    "user_id": "alice",
+    "search_history": [
+      "peliculas de romance",
+      "peliculas de comedia"
+    ],
+    "clicked_urls": [
+      "https://www.sensacine.com/peliculas/pelicula-1000022003/",
+      "https://www.sensacine.com/peliculas/pelicula-317554/",
+      "https://www.sensacine.com/peliculas/pelicula-1000008742/",
+      "https://www.sensacine.com/peliculas/pelicula-10294/"
+    ],
+    "viewed_urls": [
+      "https://www.sensacine.com/peliculas/pelicula-1000022003/",
+      "https://www.sensacine.com/peliculas/pelicula-317554/",
+      "https://www.sensacine.com/peliculas/pelicula-310776/",
+      "https://www.sensacine.com/peliculas/pelicula-1000008742/",
+      "https://www.sensacine.com/peliculas/pelicula-1000028234/",
+      "https://www.sensacine.com/peliculas/pelicula-223306/",
+      "https://www.sensacine.com/peliculas/pelicula-315380/",
+      "https://www.sensacine.com/peliculas/pelicula-10294/",
+      "https://www.sensacine.com/peliculas/pelicula-190299/",
+      "https://www.sensacine.com/peliculas/pelicula-29133/",
+      "https://www.sensacine.com/series/serie-23861/",
+      "https://www.sensacine.com/peliculas/pelicula-314942/"
+    ],
+    "genre_preferences": {
+      "comedia": 2,
+      "romántico": 3,
+      "drama": 2,
+      "familia": 1
+    },
+    "type_preferences": {
+      "película": 4
+    },
+    "term_preferences": {
+      "peliculas": 2,
+      "romance": 1,
+      "comedia": 1
+    }
+  }
+}
