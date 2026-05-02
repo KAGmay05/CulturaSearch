@@ -725,7 +725,7 @@
     "country": "EE.UU.",
     "year": "1998",
     "source": "web",
-    "source_query": "series de romance",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-10294/"
   },
   {
@@ -749,7 +749,7 @@
     "country": "Gran Bretaña,\n                                    \n                     EE.UU.",
     "year": "1980",
     "source": "web",
-    "source_query": "series de romance",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-863/"
   },
   {
@@ -772,7 +772,7 @@
       "J.K. Simmons"
     ],
     "source": "web",
-    "source_query": "series de detectives",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-262273/"
   },
   {
@@ -821,7 +821,7 @@
     "country": "EE.UU.,\n                                    \n                     Nueva Zelanda",
     "year": "2003",
     "source": "web",
-    "source_query": "series de romance",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-39187/"
   },
   {
@@ -993,7 +993,7 @@
     "country": "EE.UU.,\n                                    \n                     Gran Bretaña",
     "year": "2012",
     "source": "web",
-    "source_query": "series de romance",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-132874/"
   },
   {
@@ -1019,7 +1019,7 @@
       "America Ferrera"
     ],
     "source": "web",
-    "source_query": "series de romance",
+    "source_query": "series animadas",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-123534/"
   },
   {
@@ -1271,5 +1271,102 @@
     "source": "web",
     "source_query": "series de detectives",
     "source_url": "https://www.sensacine.com/peliculas/pelicula-1000015619/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-267335/",
+    "title": "Coyote vs Acme",
+    "genres": [
+      "Comedia",
+      "Aventura",
+      "Animación"
+    ],
+    "plot": "Wile E. Coyote está harto de que todos los productos de la corporación ACME fallen sistemáticamente en su contra, frustrando una y otra vez su persecución del Correcaminos. Por ello, decide contratar a un abogado (Will Forte) para que le ayude a demandar a la empresa. La situación se complica al descubrirse que el antiguo y despiadado jefe del abogado es, precisamente, el actual director general de ACME (John Cena). Pronto surgirá una amistad entre el Coyote y su defensor, dándoles la motivación necesaria para luchar por ganar el caso.",
+    "director": [
+      "Dave Green"
+    ],
+    "actors": [
+      "John Cena",
+      "Will Forte",
+      "Lana Condor"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "series animadas",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-267335/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-278742/",
+    "title": "Dune: Parte dos",
+    "genres": [
+      "Ciencia ficción",
+      "Drama"
+    ],
+    "plot": "Segunda parte de esta nueva adaptación de la novela de ciencia ficción escrita por Frank Herbert. Arrakis, el planeta desértico, el único lugar donde puede recolectarse la especia, clave para el comercio y la estabilidad del Imperio. Dado por muerto por sus enemigos los Harkonnen, Paul Atreides (Timothée Chalamet) se une a los fremen, pueblo de feroces guerreros que vive en el desierto cuyos ojos son de color azul brillante debido al constante contacto con la especia. Allí Paul adoptará el nombre fremen de Muad'Dib, y comenzará su entrenamiento, queriendo demostrar que puede convertirse en su líder, pudiendo incluso cabalgar un gusano de arena. Pero en las sombras se ocultan demasiados secretos, y el fin de la Casa de los Atreides se intuye próximo. Paul seguirá teniendo visiones y sueños proféticos, y deberá hacer frente al terrible futuro previsto, enfrentándose a las intrigas de los Harkonnen, a las artes ocultas de las Bene Gesserit y al poder galáctico del Imperio. Con la ayuda del frenen Stilgar (Javier Bardem), y el amor de la joven Chani (Zendaya), Paul Atreides estará llamado a ser el líder de la rebelión contra el emperador Padishah Shaddam IV (Christopher Walken) y llevar la esperanza a todo el universo conocido.",
+    "director": [
+      "Denis Villeneuve"
+    ],
+    "actors": [
+      "Timothée Chalamet",
+      "Zendaya",
+      "Rebecca Ferguson"
+    ],
+    "rating": "4,3",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2024",
+    "source": "web",
+    "source_query": "series animadas",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-278742/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000013045/",
+    "title": "La Odisea",
+    "genres": [
+      "Acción",
+      "Fantasía"
+    ],
+    "plot": "El legendario Odiseo lucha por regresar a Ítaca tras la Guerra de Troya, enfrentándose a peligros épicos y criaturas míticas. En su largo viaje, desafía a dioses caprichosos y supera obstáculos casi imposibles. Cada desafío pone a prueba su ingenio, valentía y resistencia.Su mayor deseo es reencontrarse con su amada Penélope y recuperar su hogar, enfrentando un destino lleno de aventuras inolvidables y lecciones de coraje. A lo largo del camino, la fidelidad, el honor y la astucia serán sus mejores aliados en esta odisea inolvidable.",
+    "director": [
+      "Christopher Nolan"
+    ],
+    "actors": [
+      "Matt Damon",
+      "Tom Holland",
+      "Charlize Theron"
+    ],
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "rating": null,
+    "source": "web",
+    "source_query": "series animadas",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000013045/"
+  },
+  {
+    "url": "https://www.sensacine.com/peliculas/pelicula-1000006868/",
+    "title": "El diablo viste de Prada 2",
+    "genres": [
+      "Comedia",
+      "Drama"
+    ],
+    "plot": "Miranda Priestly, leyenda de la moda y directora de Runway, se enfrenta a una nueva amenaza: Emily Charlton, su ambiciosa exasistente ahora convertida en poderosa ejecutiva de una empresa rival. En un panorama donde los medios impresos pierden terreno frente al mundo digital, ambas mujeres se enfrentan en una intensa batalla por los ingresos publicitarios.Mientras Miranda se acerca a la jubilación, lucha por mantener su legado intacto, generando un juego de poder, ingenio y ambición en el difícil mundo de la moda y los medios.",
+    "director": [
+      "David Frankel"
+    ],
+    "actors": [
+      "Meryl Streep",
+      "Anne Hathaway",
+      "Emily Blunt"
+    ],
+    "rating": "2,7",
+    "type": "pelicula",
+    "country": "EE.UU.",
+    "year": "2026",
+    "source": "web",
+    "source_query": "series animadas",
+    "source_url": "https://www.sensacine.com/peliculas/pelicula-1000006868/"
   }
 ]

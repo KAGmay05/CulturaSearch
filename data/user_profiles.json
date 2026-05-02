@@ -12,13 +12,16 @@
     "user_id": "alice",
     "search_history": [
       "peliculas de romance",
-      "peliculas de comedia"
+      "peliculas de comedia",
+      "dramas históricos con mucho conflicto",
+      "series animadas"
     ],
     "clicked_urls": [
       "https://www.sensacine.com/peliculas/pelicula-1000022003/",
       "https://www.sensacine.com/peliculas/pelicula-317554/",
       "https://www.sensacine.com/peliculas/pelicula-1000008742/",
-      "https://www.sensacine.com/peliculas/pelicula-10294/"
+      "https://www.sensacine.com/peliculas/pelicula-10294/",
+      "https://www.sensacine.com/series/serie-8506/"
     ],
     "viewed_urls": [
       "https://www.sensacine.com/peliculas/pelicula-1000022003/",
@@ -32,21 +35,42 @@
       "https://www.sensacine.com/peliculas/pelicula-190299/",
       "https://www.sensacine.com/peliculas/pelicula-29133/",
       "https://www.sensacine.com/series/serie-23861/",
-      "https://www.sensacine.com/peliculas/pelicula-314942/"
+      "https://www.sensacine.com/peliculas/pelicula-314942/",
+      "https://www.sensacine.com/series/serie-8506/",
+      "https://www.sensacine.com/series/serie-21321/",
+      "https://www.sensacine.com/series/serie-19992/",
+      "https://www.sensacine.com/series/serie-4318/",
+      "https://www.sensacine.com/series/serie-21083/",
+      "https://www.sensacine.com/peliculas/pelicula-1000033909/",
+      "https://www.sensacine.com/peliculas/pelicula-252094/",
+      "https://www.sensacine.com/peliculas/pelicula-1000003562/",
+      "https://www.sensacine.com/series/serie-685/",
+      "https://www.sensacine.com/series/serie-26626/",
+      "https://www.sensacine.com/series/serie-8555/",
+      "https://www.sensacine.com/peliculas/pelicula-2154/"
     ],
     "genre_preferences": {
-      "comedia": 2,
+      "comedia": 3,
       "romántico": 3,
-      "drama": 2,
-      "familia": 1
+      "drama": 3,
+      "familia": 1,
+      "épico": 1,
+      "animación": 1,
+      "ciencia ficción": 1
     },
     "type_preferences": {
-      "película": 4
+      "película": 4,
+      "serie": 2
     },
     "term_preferences": {
       "peliculas": 2,
       "romance": 1,
-      "comedia": 1
+      "comedia": 1,
+      "dramas": 1,
+      "historicos": 1,
+      "conflicto": 1,
+      "series": 1,
+      "animadas": 1
     }
   }
 }
