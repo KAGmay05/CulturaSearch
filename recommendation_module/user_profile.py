@@ -4,6 +4,8 @@ from nltk.tokenize import word_tokenize
 import re
 import unicodedata
 
+from recommendation_module.content_extractor import stem_tokens
+
 class User:
     def __init__(self, user_id):
         self.user_id = user_id          #id del usuario
@@ -25,8 +27,9 @@ class User:
         tokens = word_tokenize(text)                                         #convertir el texto en una lista de tokens
         stop_words = set(stopwords.words('spanish'))                         #set con las palabras que no aportan nada como articulos
         filtered_tokens = [w for w in tokens if w not in stop_words]         #nos quedamos con todas las palabras menos las stop words
+        stems = stem_tokens(filtered_tokens)
 
-        for t in filtered_tokens:             #guarda las palabras en el dictionario de preferncias de termino con su peso
+        for t in stems:             #guarda las palabras en el dictionario de preferncias de termino con su peso
             if t not in self.term_preferences:
                 self.term_preferences[t] = 1
             else:

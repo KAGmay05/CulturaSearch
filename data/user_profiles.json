@@ -1,76 +1,44 @@
 {
-  "streamlit_user": {
-    "user_id": "streamlit_user",
-    "search_history": [],
-    "clicked_urls": [],
-    "viewed_urls": [],
-    "genre_preferences": {},
-    "type_preferences": {},
-    "term_preferences": {}
-  },
   "alice": {
     "user_id": "alice",
     "search_history": [
-      "peliculas de romance",
-      "peliculas de comedia",
-      "dramas históricos con mucho conflicto",
-      "series animadas"
+      "series policiacas",
+      "peliculas de thriller"
     ],
     "clicked_urls": [
-      "https://www.sensacine.com/peliculas/pelicula-1000022003/",
-      "https://www.sensacine.com/peliculas/pelicula-317554/",
-      "https://www.sensacine.com/peliculas/pelicula-1000008742/",
-      "https://www.sensacine.com/peliculas/pelicula-10294/",
-      "https://www.sensacine.com/series/serie-8506/"
+      "https://www.sensacine.com/series/serie-790/",
+      "https://www.sensacine.com/series/serie-25075/",
+      "https://www.sensacine.com/series/serie-668/",
+      "https://www.sensacine.com/peliculas/pelicula-1000040184/",
+      "https://www.sensacine.com/peliculas/pelicula-1000014969/",
+      "https://www.sensacine.com/series/serie-8101/",
+      "https://www.sensacine.com/series/serie-19372/",
+      "https://www.sensacine.com/series/serie-232/"
     ],
     "viewed_urls": [
-      "https://www.sensacine.com/peliculas/pelicula-1000022003/",
-      "https://www.sensacine.com/peliculas/pelicula-317554/",
-      "https://www.sensacine.com/peliculas/pelicula-310776/",
-      "https://www.sensacine.com/peliculas/pelicula-1000008742/",
-      "https://www.sensacine.com/peliculas/pelicula-1000028234/",
-      "https://www.sensacine.com/peliculas/pelicula-223306/",
-      "https://www.sensacine.com/peliculas/pelicula-315380/",
-      "https://www.sensacine.com/peliculas/pelicula-10294/",
-      "https://www.sensacine.com/peliculas/pelicula-190299/",
-      "https://www.sensacine.com/peliculas/pelicula-29133/",
-      "https://www.sensacine.com/series/serie-23861/",
-      "https://www.sensacine.com/peliculas/pelicula-314942/",
-      "https://www.sensacine.com/series/serie-8506/",
-      "https://www.sensacine.com/series/serie-21321/",
-      "https://www.sensacine.com/series/serie-19992/",
-      "https://www.sensacine.com/series/serie-4318/",
-      "https://www.sensacine.com/series/serie-21083/",
-      "https://www.sensacine.com/peliculas/pelicula-1000033909/",
-      "https://www.sensacine.com/peliculas/pelicula-252094/",
-      "https://www.sensacine.com/peliculas/pelicula-1000003562/",
-      "https://www.sensacine.com/series/serie-685/",
-      "https://www.sensacine.com/series/serie-26626/",
-      "https://www.sensacine.com/series/serie-8555/",
-      "https://www.sensacine.com/peliculas/pelicula-2154/"
+      "https://www.sensacine.com/series/serie-790/",
+      "https://www.sensacine.com/series/serie-25075/",
+      "https://www.sensacine.com/series/serie-668/",
+      "https://www.sensacine.com/peliculas/pelicula-1000008929/",
+      "https://www.sensacine.com/peliculas/pelicula-1000040184/"
     ],
     "genre_preferences": {
-      "comedia": 3,
-      "romántico": 3,
-      "drama": 3,
-      "familia": 1,
-      "épico": 1,
-      "animación": 1,
-      "ciencia ficción": 1
+      "drama": 8,
+      "crimen": 6,
+      "acción": 1,
+      "comedia": 1,
+      "suspense": 4,
+      "aventura": 1
     },
     "type_preferences": {
-      "película": 4,
-      "serie": 2
+      "serie": 6,
+      "película": 2
     },
     "term_preferences": {
-      "peliculas": 2,
-      "romance": 1,
-      "comedia": 1,
-      "dramas": 1,
-      "historicos": 1,
-      "conflicto": 1,
-      "series": 1,
-      "animadas": 1
+      "seri": 1,
+      "policiac": 1,
+      "pelicul": 1,
+      "thrill": 1
     }
   }
 }
