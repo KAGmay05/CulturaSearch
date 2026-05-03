@@ -92,6 +92,51 @@ class RecommendationModuleTestCase(unittest.TestCase):
             0.5,
         )
 
+    def test_weighted_genre_preferences_prioritize_romance_over_fantasy(self):
+        engine = RecommendationEngine()
+
+        user_genres = {"comedia": 1, "romántico": 3, "fantasía": 1}
+        romance_doc = ["comedia", "romance"]
+        fantasy_doc = ["animación", "fantasía"]
+
+        romance_score = engine.calculate_weighted_genre_score(user_genres, romance_doc)
+        fantasy_score = engine.calculate_weighted_genre_score(user_genres, fantasy_doc)
+
+        self.assertGreater(romance_score, fantasy_score)
+        self.assertGreater(romance_score, 0.5)
+
+    def test_personalization_prefers_romance_comedy_over_animation(self):
+        engine = RecommendationEngine()
+
+        user = User("alice")
+        user.search_history = ["peliculas de romance", "series de comedia"]
+        user.term_preferences = {"peliculas": 1, "romance": 1, "series": 1, "comedia": 1}
+        user.genre_preferences = {"comedia": 1, "romántico": 3, "fantasía": 1}
+        user.type_preferences = {"película": 2, "serie": 1}
+
+        docs = [
+            make_doc(
+                "https://example.com/animation",
+                "Antony el pequeño super héroe",
+                "pelicula",
+                "Un pequeño héroe con poderes mágicos y aventuras de fantasía.",
+                genres=["animación", "fantasía", "acción"],
+            ),
+            make_doc(
+                "https://example.com/romcom",
+                "Romance y comedia",
+                "pelicula",
+                "Una pareja descubre el amor entre risas y situaciones divertidas.",
+                genres=["comedia", "romance"],
+            ),
+        ]
+
+        scored = engine.content_based_score(user, docs)
+        ranked_urls = [item.document["url"] for item in sorted(scored, key=lambda d: d.final_score, reverse=True)]
+
+        self.assertEqual(ranked_urls[0], "https://example.com/romcom")
+        self.assertEqual(ranked_urls[1], "https://example.com/animation")
+
     def test_recency_boost_prefers_recent_matches(self):
         engine = RecommendationEngine()
         history = ["accion", "thriller", "comedia romantica"]
