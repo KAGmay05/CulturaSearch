@@ -11,6 +11,7 @@ from recommendation_module.user_profile import User
 from recommendation_module.recommendation import RecommendationEngine, recommend_for_user
 from positioning_module import sort_by_name, sort_by_year, sort_by_rating, sort_by_relevance
 from auth import authenticate
+from rag_module.pipeline import RAGPipeline
 
 
 st.set_page_config(
@@ -187,6 +188,12 @@ def get_retriever() -> NeuralRetriever:
     return retriever
 
 
+@st.cache_resource(show_spinner=False)
+def get_rag_pipeline() -> RAGPipeline:
+    rag = RAGPipeline()
+    return rag
+
+
 def use_example(value: str) -> None:
     st.session_state["search_query"] = value
 
@@ -195,6 +202,7 @@ def clear_search() -> None:
     st.session_state["search_query"] = ""
     st.session_state["last_results"] = []
     st.session_state["last_query"] = ""
+    st.session_state["last_rag_descriptions"] = {}
 
 
 def score_label(score: float) -> tuple[str, str]:
@@ -221,6 +229,7 @@ def snippet_text(text: str, limit: int = 380) -> str:
     if not cleaned:
         return "Sin sinopsis disponible."
     return cleaned if len(cleaned) <= limit else cleaned[:limit].rstrip() + "…"
+
 
 
 def render_metric(label: str, value: str) -> str:
@@ -256,7 +265,32 @@ def format_rating_value(value) -> str:
         return "0.0"
 
 
-def render_result_card(item: SearchResult, rank: int) -> None:
+def get_result_year(item: SearchResult) -> int | None:
+    """Returns the best available start year for a result (for filtering)."""
+    try:
+        retriever = get_retriever()
+        doc = retriever._resolve_result_document(item)
+    except Exception:
+        doc = {}
+    # Series: parse year_range (e.g. "2011-2019" or "2019-presente")
+    year_range = doc.get("year_range")
+    if year_range:
+        try:
+            return int(str(year_range).split("-")[0].strip())
+        except Exception:
+            pass
+    # Movies: year field
+    year = doc.get("year")
+    if year not in (None, "", "null"):
+        try:
+            text = str(year).strip()
+            return int(text[:4]) if len(text) >= 4 and text[:4].isdigit() else int(text)
+        except Exception:
+            pass
+    return None
+
+
+def render_result_card(item: SearchResult, rank: int, summary_override: str | None = None) -> None:
     try:
         retriever = get_retriever()
         doc_meta = retriever._resolve_result_document(item)
@@ -265,11 +299,37 @@ def render_result_card(item: SearchResult, rank: int) -> None:
 
     title = html.escape(item.title or "Sin título")
     kind = content_kind(item.media_type)
-    summary = html.escape(snippet_text(item.plot or getattr(item, 'description', '') or ''))
+    summary_source = summary_override if summary_override else (item.plot or getattr(item, 'description', '') or '')
+    snippet_limit = 380
+    cleaned_summary = (summary_source or "").strip()
+    is_long = len(cleaned_summary) > snippet_limit
+    # Unique key for expand state per card
+    expand_key = f"expand_{rank}_{abs(hash(item.url or item.title or rank))}"
+    expanded = st.session_state.get(expand_key, False)
+    if is_long:
+        if not expanded:
+            summary = html.escape(cleaned_summary[:snippet_limit].rstrip() + "…")
+        else:
+            summary = html.escape(cleaned_summary)
+    else:
+        summary = html.escape(cleaned_summary) if cleaned_summary else "Sin sinopsis disponible."
     score_pct = max(0.0, min(100.0, float(item.score) * 100.0))
     label, color = score_label(float(item.score or 0.0))
     url = (item.url or "").strip()
-    year_text = format_year_value(doc_meta.get("year"))
+    year_range = doc_meta.get("year_range")
+    year_raw = doc_meta.get("year")
+    if year_range:
+        # Series: show full range (e.g. "2011-2019" or "2019-presente")
+        year_text = str(year_range)
+    else:
+        year_text = format_year_value(year_raw)
+        if year_text == "Sin año":
+            seasons = doc_meta.get("seasons")
+            episodes = doc_meta.get("episodes")
+            if seasons:
+                year_text = f"{seasons} temp."
+                if episodes:
+                    year_text += f" · {episodes} ep."
     rating_text = format_rating_value(doc_meta.get("rating"))
 
     type_icon = "🎬" if kind == "movie" else "📺" if kind == "series" else "🎭"
@@ -289,7 +349,7 @@ def render_result_card(item: SearchResult, rank: int) -> None:
                         <span class="cs-relevance" style="color:{color}">● {label}</span>
                     </div>
                     <div class="cs-card-meta" style="margin-top:0.55rem; display:flex; gap:0.75rem; flex-wrap:wrap; color:#8b949e; font-size:0.92rem;">
-                        <span>📅 Año: <strong style="color:#e6edf3;">{html.escape(year_text)}</strong></span>
+                        <span>📅 <strong style="color:#e6edf3;">{html.escape(year_text)}</strong></span>
                         <span>⭐ Rating: <strong style="color:#e6edf3;">{html.escape(rating_text)}</strong></span>
                     </div>
                 </div>
@@ -304,6 +364,11 @@ def render_result_card(item: SearchResult, rank: int) -> None:
         """,
         unsafe_allow_html=True,
     )
+    # Expand/collapse button for long descriptions
+    if is_long:
+        btn_label = "Ver más" if not expanded else "Ver menos"
+        if st.button(btn_label, key=expand_key+"_btn", use_container_width=True):
+            st.session_state[expand_key] = not expanded
 
     col1, col2 = st.columns([1, 4])
     with col1:
@@ -480,7 +545,7 @@ def show_app() -> None:
     user_name = st.session_state.get("user_name", "Usuario")
     user_id = st.session_state.get("user_id", "")
 
-    for key, default in [("search_query", ""), ("last_results", []), ("last_query", ""), ("last_web_mode", False), ("sort_option", "relevance"), ("results_sorted", [])]:
+    for key, default in [("search_query", ""), ("last_results", []), ("last_query", ""), ("last_web_mode", False), ("sort_option", "relevance"), ("results_sorted", []), ("last_rag_descriptions", {})]:
         if key not in st.session_state:
             st.session_state[key] = default
 
@@ -561,6 +626,9 @@ def show_app() -> None:
                         rerank_weight=rerank_weight,
                     )
 
+                    rag = get_rag_pipeline()
+                    rag_descriptions = rag.generate_descriptions(query.strip(), res)
+
                     try:
                         if user_profile is not None:
                             user_profile.register_search(query.strip())
@@ -571,6 +639,7 @@ def show_app() -> None:
                     st.session_state["last_results"] = res
                     st.session_state["last_query"] = query.strip()
                     st.session_state["last_web_mode"] = use_web_expansion
+                    st.session_state["last_rag_descriptions"] = rag_descriptions
 
                     if not res:
                         st.warning("No se encontraron resultados. Intenta con otros términos.")
@@ -581,6 +650,7 @@ def show_app() -> None:
     results: list[SearchResult] = st.session_state.get("last_results", [])
     last_query: str = st.session_state.get("last_query", "")
     last_web_mode: bool = st.session_state.get("last_web_mode", False)
+    last_rag_descriptions: dict = st.session_state.get("last_rag_descriptions", {})
 
     if results:
         retriever = get_retriever()
@@ -679,9 +749,43 @@ def show_app() -> None:
         else:
             results_sorted = results
 
+        # Year filter — compute range from current results
+        result_years = [(item, get_result_year(item)) for item in results_sorted]
+        known_years = [y for _, y in result_years if y is not None]
+        if known_years:
+            year_min_avail = min(known_years)
+            year_max_avail = max(known_years)
+        else:
+            year_min_avail, year_max_avail = 1950, 2026
+
+        with st.expander("📅 Filtrar por año", expanded=False):
+            filter_enabled = st.toggle("Activar filtro de año", value=False, key="year_filter_on")
+            if filter_enabled:
+                year_range_sel = st.slider(
+                    "Rango de año",
+                    min_value=year_min_avail,
+                    max_value=year_max_avail,
+                    value=(year_min_avail, year_max_avail),
+                    step=1,
+                    key="year_filter_range",
+                    help="Filtra resultados por año de inicio. Resultados sin año conocido se muestran siempre.",
+                )
+            else:
+                year_range_sel = None
+
+        # Apply year filter
+        if year_range_sel is not None:
+            y_lo, y_hi = year_range_sel
+            results_sorted = [
+                item for item, yr in result_years
+                if yr is None or (y_lo <= yr <= y_hi)
+            ]
+
         # Display results with selected sorting
         for rank, item in enumerate(results_sorted, start=1):
-            render_result_card(item, rank)
+            url = (item.url or "").strip()
+            rag_summary = last_rag_descriptions.get(url) if url else None
+            render_result_card(item, rank, summary_override=rag_summary)
 
     else:
         st.markdown(

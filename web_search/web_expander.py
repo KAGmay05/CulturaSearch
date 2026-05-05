@@ -15,7 +15,8 @@ DUCKDUCKGO_SEARCH_URL = "https://html.duckduckgo.com/html/"
 SENSACINE_BASE_URL = "https://www.sensacine.com"
 SENSACINE_SEARCH_URL = f"{SENSACINE_BASE_URL}/buscar/"
 DEFAULT_SEED_FILE_PATHS = ["seeds/seed_sensacine.json"]
-DEFAULT_WEB_CACHE_PATH = "data/web_cache_sensacine.json"
+DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
+DEFAULT_QUERY_CACHE_PATH = "data/web_expansion_queries.json"
 
 
 class WebExpander:
@@ -26,11 +27,15 @@ class WebExpander:
         cache_path: str = DEFAULT_WEB_CACHE_PATH,
         seed_file_paths: List[str] | None = None,
         max_pages_per_seed: int = 2,
+        query_cache_path: str = DEFAULT_QUERY_CACHE_PATH,
     ) -> None:
         """Configures cache location, seeds and traversal limits for expansion."""
         self.cache_path = cache_path
         self.seed_file_paths = seed_file_paths or list(DEFAULT_SEED_FILE_PATHS)
         self.max_pages_per_seed = max_pages_per_seed
+        # query_cache_path is derived from cache_path dir so both files stay together
+        cache_dir = os.path.dirname(cache_path) or "data"
+        self.query_cache_path = os.path.join(cache_dir, os.path.basename(query_cache_path))
 
     def _load_seed_urls(self) -> List[str]:
         """Loads valid seed URLs from configured JSON files."""
@@ -264,14 +269,47 @@ class WebExpander:
         with open(self.cache_path, "w", encoding="utf-8") as f:
             json.dump(list(merged_by_url.values()), f, indent=2, ensure_ascii=False)
 
+    def _load_query_cache(self) -> set:
+        """Returns the set of queries that have already been web-expanded."""
+        if not os.path.exists(self.query_cache_path):
+            return set()
+        try:
+            with open(self.query_cache_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            if isinstance(data, list):
+                return set(data)
+        except Exception:
+            pass
+        return set()
+
+    def _save_query_cache(self, query: str) -> None:
+        """Persists a query to the expanded-queries cache."""
+        existing = self._load_query_cache()
+        existing.add(query.strip().lower())
+        os.makedirs(os.path.dirname(self.query_cache_path) or ".", exist_ok=True)
+        with open(self.query_cache_path, "w", encoding="utf-8") as f:
+            json.dump(sorted(existing), f, ensure_ascii=False, indent=2)
+
     def expand(self, query: str, max_results: int = 10) -> List[Dict]:
         """Expands corpus with scraped web documents relevant to the query.
 
         Uses a discovery cascade (SensaCine search, DuckDuckGo, seeds), scrapes
         the resulting pages, persists cache and returns newly obtained docs.
+        Skips re-expansion entirely if the query has already been expanded before.
+        Skips individual URLs already present in the document cache.
         """
         if not query or not query.strip():
             return []
+
+        # Skip re-expansion for queries already processed
+        query_key = query.strip().lower()
+        if query_key in self._load_query_cache():
+            print(f"[WEB EXPANSION] Query ya expandida anteriormente, omitiendo: '{query}'")
+            return []
+
+        # Build set of URLs already in the doc cache so we don't re-scrape them
+        cached_urls = {str(doc.get("url", "")) for doc in self._load_cache() if doc.get("url")}
+        print(f"[WEB EXPANSION] URLs ya en cache: {len(cached_urls)}")
 
         print(f"\n========== WEB EXPANSION START ==========")
         print(f"Query: '{query}'")
@@ -329,9 +367,11 @@ class WebExpander:
         seen_doc_urls = set()
         scrape_ok = 0
         scrape_failed = 0
-        print(f"\n[SCRAPING] Iniciando scraping de {min(len(discovered_urls), max_results)} URLs encontradas...")
+        skipped_cached = 0
+        urls_to_scrape = [u for u in discovered_urls[:max_results] if u not in cached_urls]
+        print(f"\n[SCRAPING] Iniciando scraping de {len(urls_to_scrape)} URLs nuevas (omitidas {len(discovered_urls[:max_results]) - len(urls_to_scrape)} ya en cache)...")
 
-        for movie_url in discovered_urls[:max_results]:
+        for movie_url in urls_to_scrape:
             movie = scrape_movie(movie_url)
             if not movie:
                 print(f"[SCRAPING] Fallo al scrapear: {movie_url}")
@@ -353,6 +393,10 @@ class WebExpander:
 
         if documents:
             self._save_cache(documents)
+            self._save_query_cache(query)
+        elif not urls_to_scrape:
+            # All discovered URLs were already cached — still mark query as done
+            self._save_query_cache(query)
         print(f"Diagnostico scraping -> scrape_ok={scrape_ok}, scrape_failed={scrape_failed}")
         print(f"Documentos expandidos desde la web: {len(documents)}")
         print(f"========== WEB EXPANSION END ==========\n")

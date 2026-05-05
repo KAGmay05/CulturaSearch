@@ -3,7 +3,19 @@
     "user_id": "alice",
     "search_history": [
       "series policiacas",
-      "peliculas de thriller"
+      "peliculas de thriller",
+      "recomiendame peliculas de comedia francesas",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "recomiendame peliculas animadas para adultos",
+      "Juego de Tronos",
+      "películas de ciencia ficción con viajes en el tiempo",
+      "juego de tronos"
     ],
     "clicked_urls": [
       "https://www.sensacine.com/series/serie-790/",
@@ -20,7 +32,12 @@
       "https://www.sensacine.com/series/serie-25075/",
       "https://www.sensacine.com/series/serie-668/",
       "https://www.sensacine.com/peliculas/pelicula-1000008929/",
-      "https://www.sensacine.com/peliculas/pelicula-1000040184/"
+      "https://www.sensacine.com/peliculas/pelicula-1000040184/",
+      "https://www.sensacine.com/peliculas/pelicula-279636/",
+      "https://www.sensacine.com/peliculas/pelicula-1000015619/",
+      "https://www.sensacine.com/series/serie-22289/",
+      "https://www.sensacine.com/series/serie-18518/",
+      "https://www.sensacine.com/series/serie-829/"
     ],
     "genre_preferences": {
       "drama": 8,
@@ -37,8 +54,19 @@
     "term_preferences": {
       "seri": 1,
       "policiac": 1,
-      "pelicul": 1,
-      "thrill": 1
+      "pelicul": 11,
+      "thrill": 1,
+      "recomiendam": 2,
+      "comedi": 1,
+      "frances": 1,
+      "cienci": 8,
+      "ficcion": 8,
+      "viaj": 8,
+      "tiemp": 8,
+      "anim": 1,
+      "adult": 1,
+      "jueg": 2,
+      "tron": 2
     }
   }
 }

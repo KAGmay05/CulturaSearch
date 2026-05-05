@@ -531,8 +531,12 @@ class NeuralRetriever:
         top_score = float(local_results[0].score) if local_results else 0.0
         lexical_coverage = self._query_lexical_coverage(query)
 
-        needs_web_expansion = (top_score < hard_min_local_score) or (
-            (top_score < min_local_score) and (lexical_coverage < min_lexical_coverage)
+        # If query terms are well covered in the local index, trust local results even
+        # when rerank scores are low (reranker may underestimate title-only queries).
+        high_lexical_coverage = lexical_coverage >= min_lexical_coverage
+        needs_web_expansion = (
+            (top_score < hard_min_local_score and not high_lexical_coverage)
+            or (top_score < min_local_score and not high_lexical_coverage)
         )
 
         if not needs_web_expansion:
