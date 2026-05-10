@@ -1,0 +1,36 @@
+"""Positioning module public API."""
+from .ranking import (
+    compute_lexical_scores,
+    compute_positioning_score,
+    compute_hybrid_fusion,
+    compute_rerank_fusion,
+    stable_rank_indices,
+    sigmoid,
+    extract_query_genre_tokens,
+    genre_match_score,
+    metadata_completeness_score,
+    build_positioning_tie_breaker,
+    rank_by_positioning,
+    sort_by_name,
+    sort_by_year,
+    sort_by_rating,
+    sort_by_relevance,
+)
+
+__all__ = [
+    "compute_lexical_scores",
+    "compute_positioning_score",
+    "compute_hybrid_fusion",
+    "compute_rerank_fusion",
+    "stable_rank_indices",
+    "sigmoid",
+    "extract_query_genre_tokens",
+    "genre_match_score",
+    "metadata_completeness_score",
+    "build_positioning_tie_breaker",
+    "rank_by_positioning",
+    "sort_by_name",
+    "sort_by_year",
+    "sort_by_rating",
+    "sort_by_relevance",
+]

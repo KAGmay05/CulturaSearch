@@ -1,12 +1,19 @@
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+from nltk.stem.snowball import SnowballStemmer
 import re
 import unicodedata
 import json
 from pathlib import Path
 
 DATASET = Path("data/dataset.json")
+
+_STEMMER = SnowballStemmer("spanish")
+
+
+def stem_tokens(tokens):
+    return [_STEMMER.stem(str(token)) for token in tokens if str(token).strip()]
 
 def clean_text(text):   #limpiar texto
     text = (text or "").lower()
@@ -20,7 +27,7 @@ def clean_text(text):   #limpiar texto
         tokens = text.split()
         stop_words = {'de', 'la', 'el', 'los', 'las', 'y', 'o', 'con', 'en', 'por', 'para', 'que', 'un', 'una'}
     filtered_tokens = [w for w in tokens if w and w not in stop_words]
-    return filtered_tokens
+    return stem_tokens(filtered_tokens)
 
 def to_list(value):
     if value is None:

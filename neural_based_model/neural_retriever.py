@@ -13,6 +13,7 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 from bd import vectorizer as bd_vectorizer
 from index import indexer
 from web_search.web_expander import WebExpander
+from positioning_module.ranking import compute_lexical_scores, compute_hybrid_fusion, compute_positioning_score, compute_rerank_fusion, rank_by_positioning, sigmoid
 
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
@@ -119,7 +120,7 @@ class NeuralRetriever:
     @staticmethod
     def _sigmoid(values: np.ndarray) -> np.ndarray:
         """Applies a sigmoid transform to map raw scores into [0, 1]."""
-        return 1.0 / (1.0 + np.exp(-values))
+        return sigmoid(values)
 
     def _build_text(self, movie: Dict) -> str:
         """Builds the canonical searchable text representation for one document."""
@@ -197,92 +198,6 @@ class NeuralRetriever:
                 posting[doc_idx] = tf
         self.doc_count = len(self.documents)
 
-    def _normalize_text_tokens(self, value: str) -> List[str]:
-        """Normalizes free text into project-consistent lexical tokens."""
-        if not value:
-            return []
-        return indexer.clean_text(str(value))
-
-    def _extract_query_genre_tokens(self, query: str) -> set[str]:
-        """Extracts query tokens that overlap with known genre labels."""
-        query_tokens = set(self._normalize_text_tokens(query))
-        if not query_tokens:
-            return set()
-
-        genre_tokens: set[str] = set()
-        for doc in self.documents:
-            genres = doc.get("genres", [])
-            if not isinstance(genres, list):
-                genres = [genres]
-            for genre in genres:
-                genre_tokens.update(self._normalize_text_tokens(str(genre)))
-        return query_tokens & genre_tokens
-
-    def _genre_match_score(self, query_genre_tokens: set[str], doc: Dict) -> float:
-        """Scores how well document genres align with genre tokens present in the query."""
-        if not query_genre_tokens:
-            return 0.0
-
-        genres = doc.get("genres", [])
-        if not isinstance(genres, list):
-            genres = [genres]
-
-        doc_genre_tokens: set[str] = set()
-        for genre in genres:
-            doc_genre_tokens.update(self._normalize_text_tokens(str(genre)))
-
-        if not doc_genre_tokens:
-            return 0.0
-        return float(len(query_genre_tokens & doc_genre_tokens)) / float(len(query_genre_tokens))
-
-    @staticmethod
-    def _metadata_completeness_score(doc: Dict) -> float:
-        """Measures how complete the most relevant retrieval metadata is for a document."""
-        metadata_fields = (
-            "title",
-            "plot",
-            "genres",
-            "actors",
-            "director",
-            "creator",
-            "country",
-            "year",
-            "rating",
-            "type",
-            "seasons",
-            "episodes",
-        )
-
-        present = 0
-        for field in metadata_fields:
-            value = doc.get(field)
-            if value is None:
-                continue
-            if isinstance(value, str) and not value.strip():
-                continue
-            if isinstance(value, list) and not value:
-                continue
-            present += 1
-        return float(present)
-
-    @staticmethod
-    def _popularity_score(doc: Dict) -> float:
-        """Returns popularity/rating signal, preferring popularity when available."""
-        raw_value = doc.get("popularity", doc.get("rating"))
-        if raw_value is None:
-            return 0.0
-        if isinstance(raw_value, (int, float)):
-            numeric_value = float(raw_value)
-        else:
-            text = str(raw_value).strip().replace(",", ".")
-            try:
-                numeric_value = float(text)
-            except ValueError:
-                return 0.0
-        if math.isnan(numeric_value) or math.isinf(numeric_value):
-            return 0.0
-        return numeric_value
-
     def _resolve_result_document(self, result: SearchResult) -> Dict:
         """Resolves full document metadata for a ranked result."""
         doc_idx = self.url_to_doc_idx.get(result.url)
@@ -295,84 +210,23 @@ class NeuralRetriever:
             "type": result.media_type,
         }
 
-    def _stable_rank_indices(
-        self,
-        *,
-        primary_scores: Sequence[float],
-        query: str,
-        docs: Sequence[Dict],
-        original_positions: Sequence[int],
-    ) -> np.ndarray:
-        """Builds a deterministic ranking with explicit secondary tie-break criteria."""
-        query_genre_tokens = self._extract_query_genre_tokens(query)
-        primary = np.asarray(primary_scores, dtype=float)
-        genre_scores = np.array(
-            [self._genre_match_score(query_genre_tokens, doc) for doc in docs],
-            dtype=float,
-        )
-        metadata_scores = np.array(
-            [self._metadata_completeness_score(doc) for doc in docs],
-            dtype=float,
-        )
-        popularity_scores = np.array(
-            [self._popularity_score(doc) for doc in docs],
-            dtype=float,
-        )
-        positions = np.asarray(original_positions, dtype=int)
-
-        return np.lexsort(
-            (
-                positions,
-                -popularity_scores,
-                -metadata_scores,
-                -genre_scores,
-                -primary,
-            )
-        )
-
     def _compute_lexical_scores(self, query: str) -> np.ndarray:
-        """Computes TF-IDF-like lexical scores with partial-token coverage penalties."""
+        """Delegate lexical scoring to positioning module using cleaned doc texts."""
         if not self.documents:
             return np.array([])
 
-        scores = np.zeros(len(self.documents), dtype=float)
         query_tokens = indexer.clean_text(query)
         if not query_tokens:
-            return scores
+            return np.zeros(len(self.documents), dtype=float)
 
-        query_tf = Counter(query_tokens)
-        print(f"\n[LEXICAL DEBUG] Query: '{query}'")
-        print(f"[LEXICAL DEBUG] Query tokens after cleaning: {query_tokens}")
-        print(f"[LEXICAL DEBUG] Query TF: {dict(query_tf)}")
-        
-        # Para cada documento, trackear qué tokens se encontraron
-        found_tokens_per_doc = {i: set() for i in range(len(self.documents))}
-        
-        for token, qtf in query_tf.items():
-            posting = self.lexical_index.get(token)
-            if not posting:
-                print(f"[LEXICAL DEBUG]   Token '{token}': NOT in index")
-                continue
-            df = len(posting)
-            # Downweight very common terms (e.g., "serie", "comedia") to reduce lexical noise.
-            idf = float(np.log((self.doc_count + 1) / (df + 1)) + 1.0)
-            #print(f"[LEXICAL DEBUG]   Token '{token}': found in {df} docs, IDF={idf:.2f}")
-            for doc_idx, dtf in posting.items():
-                scores[doc_idx] += qtf * dtf * idf
-                found_tokens_per_doc[doc_idx].add(token)
-        
-        # Penalizar documentos que no tienen todos los tokens de la query
-        required_tokens = set(query_tf.keys())
-        #print(f"[LEXICAL DEBUG] Required tokens: {required_tokens}")
-        for doc_idx in range(len(self.documents)):
-            found = found_tokens_per_doc[doc_idx]
-            missing = required_tokens - found
-            if missing:
-                penalty_factor = (len(required_tokens) - len(missing)) / len(required_tokens)
-                scores[doc_idx] *= penalty_factor
-                #print(f"[LEXICAL DEBUG]   Doc #{doc_idx} ({self.documents[doc_idx].get('title', 'N/A')}): missing {missing}, penalty factor={penalty_factor:.2f}")
+        docs_for_scoring = []
+        for doc in self.documents:
+            text = self._build_text(doc)
+            clean = " ".join(indexer.clean_text(text))
+            docs_for_scoring.append({"clean_text": clean, "metadata": doc})
 
-        return scores
+        scores = compute_lexical_scores(query_tokens, docs_for_scoring)
+        return np.array(scores, dtype=float)
 
     def _query_lexical_coverage(self, query: str) -> float:
         """Returns fraction of unique query tokens present in lexical index."""
@@ -532,28 +386,17 @@ class NeuralRetriever:
         # Con embeddings normalizados, producto punto == coseno.
         neural_scores = (self.embeddings @ query_vector[0]).astype(float)
         lexical_scores = self._compute_lexical_scores(query)
-
-        neural_norm = np.clip((neural_scores + 1.0) / 2.0, 0.0, 1.0)
-        max_lex = float(np.max(lexical_scores)) if lexical_scores.size else 0.0
-        if max_lex > 0:
-            lexical_norm = lexical_scores / max_lex
-        else:
-            lexical_norm = np.zeros_like(neural_norm)
-
-        # If lexical matches too many docs, reduce lexical impact automatically.
-        lex_coverage = float((lexical_scores > 0).sum()) / float(len(lexical_scores)) if len(lexical_scores) else 0.0
-        lexical_weight = (1.0 - alpha) * max(0.10, 1.0 - lex_coverage)
-        neural_weight = 1.0 - lexical_weight
-
-        fused_scores = neural_weight * neural_norm + lexical_weight * lexical_norm
+        hybrid_data = compute_hybrid_fusion(neural_scores=neural_scores, lexical_scores=lexical_scores, alpha=alpha)
+        fused_scores = hybrid_data["fused_scores"]
 
         top_k = max(1, min(top_k, len(fused_scores)))
-        sorted_indices = self._stable_rank_indices(
+        sorted_indices = rank_by_positioning(
             primary_scores=fused_scores,
             query=query,
             docs=self.documents,
             original_positions=np.arange(len(self.documents)),
-        )[:top_k]
+            top_k=top_k,
+        )
 
         results: List[SearchResult] = []
         for rank, idx in enumerate(sorted_indices, start=1):
@@ -566,8 +409,8 @@ class NeuralRetriever:
                     title=str(doc.get("title", "Sin titulo")),
                     media_type=str(doc.get("type", "desconocido")),
                     plot=str(doc.get("plot", "")),
-                    neural_score=float(neural_scores[idx]),
-                    lexical_score=float(lexical_scores[idx]),
+                    neural_score=float(hybrid_data["neural_scores"][idx]),
+                    lexical_score=float(hybrid_data["lexical_scores"][idx]),
                     rerank_score=0.0,
                 )
             )
@@ -592,11 +435,6 @@ class NeuralRetriever:
 
         rerank_weight = float(np.clip(rerank_weight, 0.0, 1.0))
         base_scores = np.array([float(c.score) for c in candidates], dtype=float)
-        max_base = float(np.max(base_scores)) if base_scores.size else 0.0
-        if max_base > 0:
-            base_norm = base_scores / max_base
-        else:
-            base_norm = np.zeros_like(base_scores)
 
         try:
             reranker = self._load_reranker(reranker_model_name)
@@ -615,20 +453,21 @@ class NeuralRetriever:
                     )
                 pair_texts.append((query, doc_text))
             rerank_raw = np.array(reranker.predict(pair_texts), dtype=float)
-            rerank_norm = self._sigmoid(rerank_raw)
+            rerank_data = compute_rerank_fusion(base_scores=base_scores, rerank_raw=rerank_raw, rerank_weight=rerank_weight)
+            final_scores = rerank_data["final_scores"]
         except Exception:
             rerank_raw = np.zeros(len(candidates), dtype=float)
-            rerank_norm = np.zeros(len(candidates), dtype=float)
-
-        final_scores = (1.0 - rerank_weight) * base_norm + rerank_weight * rerank_norm
+            rerank_data = compute_rerank_fusion(base_scores=base_scores, rerank_raw=rerank_raw, rerank_weight=rerank_weight)
+            final_scores = rerank_data["final_scores"]
         top_k = max(1, min(top_k, len(candidates)))
         candidate_docs = [self._resolve_result_document(candidate) for candidate in candidates]
-        sorted_idx = self._stable_rank_indices(
+        sorted_idx = rank_by_positioning(
             primary_scores=final_scores,
             query=query,
             docs=candidate_docs,
             original_positions=np.arange(len(candidates)),
-        )[:top_k]
+            top_k=top_k,
+        )
 
         reranked: List[SearchResult] = []
         for rank, idx in enumerate(sorted_idx, start=1):
@@ -692,8 +531,12 @@ class NeuralRetriever:
         top_score = float(local_results[0].score) if local_results else 0.0
         lexical_coverage = self._query_lexical_coverage(query)
 
-        needs_web_expansion = (top_score < hard_min_local_score) or (
-            (top_score < min_local_score) and (lexical_coverage < min_lexical_coverage)
+        # If query terms are well covered in the local index, trust local results even
+        # when rerank scores are low (reranker may underestimate title-only queries).
+        high_lexical_coverage = lexical_coverage >= min_lexical_coverage
+        needs_web_expansion = (
+            (top_score < hard_min_local_score and not high_lexical_coverage)
+            or (top_score < min_local_score and not high_lexical_coverage)
         )
 
         if not needs_web_expansion:
