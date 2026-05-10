@@ -18,7 +18,7 @@ from positioning_module.ranking import compute_lexical_scores, compute_hybrid_fu
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 # Modelo de re-ranking pequeño (~500MB, no 14.5GB)
-DEFAULT_RERANKER_MODEL_NAME = "ms-marco-MiniLM-L-6-v2"
+DEFAULT_RERANKER_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 DEFAULT_DATASET_PATH = "data/dataset.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
