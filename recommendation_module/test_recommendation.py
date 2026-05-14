@@ -95,13 +95,16 @@ class RecommendationModuleTestCase(unittest.TestCase):
     def test_weighted_genre_preferences_prioritize_romance_over_fantasy(self):
         engine = RecommendationEngine()
 
-        user_genres = {"comedia": 1, "romántico": 3, "fantasía": 1}
-        romance_doc = ["comedia", "romance"]
-        fantasy_doc = ["animación", "fantasía"]
+        user_genres = {"comedia": 1, "romantico": 3, "fantasia": 1}
+        # Romance doc has "romantico" (weight=3), matching high preference
+        romance_doc = ["comedia", "romantico"]
+        # Fantasy doc has only "fantasia" (weight=1), matching low preference
+        fantasy_doc = ["animacion", "fantasia"]
 
         romance_score = engine.calculate_weighted_genre_score(user_genres, romance_doc)
         fantasy_score = engine.calculate_weighted_genre_score(user_genres, fantasy_doc)
 
+        # Romance score (3/5=0.6) > fantasy score (1/5=0.2)
         self.assertGreater(romance_score, fantasy_score)
         self.assertGreater(romance_score, 0.5)
 

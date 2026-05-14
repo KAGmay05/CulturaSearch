@@ -15,7 +15,10 @@
       "recomiendame peliculas animadas para adultos",
       "Juego de Tronos",
       "películas de ciencia ficción con viajes en el tiempo",
-      "juego de tronos"
+      "juego de tronos",
+      "peliculas de joe johnston",
+      "peliculas de joe johnston",
+      "peliculas de joe johnston"
     ],
     "clicked_urls": [
       "https://www.sensacine.com/series/serie-790/",
@@ -54,7 +57,7 @@
     "term_preferences": {
       "seri": 1,
       "policiac": 1,
-      "pelicul": 11,
+      "pelicul": 14,
       "thrill": 1,
       "recomiendam": 2,
       "comedi": 1,
@@ -66,7 +69,9 @@
       "anim": 1,
       "adult": 1,
       "jueg": 2,
-      "tron": 2
+      "tron": 2,
+      "joe": 3,
+      "johnston": 3
     }
   }
 }

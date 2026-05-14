@@ -10,6 +10,7 @@ MODEL_NAME = 'paraphrase-multilingual-MiniLM-L12-v2'
 INDEX_TYPE = "IndexFlatIP"
 INDEX_PATH = 'bd/movies_vectors.index'
 METADATA_PATH = 'bd/metadata.pkl'
+TEXT_REPRESENTATION_VERSION = 2
 
 
 def _safe_text(value):
@@ -22,7 +23,20 @@ def _default_text_builder(mov):
     title = _safe_text(mov.get('title', ''))
     plot = _safe_text(mov.get('plot', ''))
     genres = _safe_text(mov.get('genres', ''))
-    return (title + " " + plot + " " + genres).strip()
+    year = _safe_text(mov.get('year', ''))
+    rating = _safe_text(mov.get('rating', ''))
+    media_type = _safe_text(mov.get('type', ''))
+    country = _safe_text(mov.get('country', ''))
+    seasons = _safe_text(mov.get('seasons', ''))
+    episodes = _safe_text(mov.get('episodes', ''))
+    year_range = _safe_text(mov.get('year_range', ''))
+    actors = _safe_text(mov.get('actors', ''))
+    directors = _safe_text(mov.get('director', ''))
+    creators = _safe_text(mov.get('creator', ''))
+    return (
+        f"{title} {year} {year_range} {rating} {media_type} {country} "
+        f"{genres} {directors} {creators} {seasons} temporadas {episodes} episodios {plot} {actors}"
+    ).strip()
 
 
 def _load_metadata(metadata_path=METADATA_PATH):
@@ -94,6 +108,7 @@ def build_embeddings(
         "dtype": str(embeddings.dtype),
         "normalized": True,
         "similarity": "cosine_via_ip",
+        "text_version": TEXT_REPRESENTATION_VERSION,
     }
 
     if include_documents:
