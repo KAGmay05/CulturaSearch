@@ -13,7 +13,7 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 from bd import vectorizer as bd_vectorizer
 from index import indexer
 from web_search.web_expander import WebExpander
-from positioning_module.ranking import compute_lexical_scores, compute_hybrid_fusion, compute_positioning_score, compute_rerank_fusion, rank_by_positioning, sigmoid
+from positioning_module.ranking import compute_lexical_scores, compute_hybrid_fusion, compute_positioning_score, compute_rerank_fusion, compute_metadata_alignment_scores, compute_actor_alignment_scores, compute_season_alignment_scores, compute_episode_alignment_scores, compute_year_alignment_scores, compute_country_alignment_scores, rank_by_positioning, sigmoid
 
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
@@ -24,6 +24,7 @@ DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
 DEFAULT_VECTOR_METADATA_PATH = "bd/metadata.pkl"
 DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
+TEXT_REPRESENTATION_VERSION = 2
 
 
 @dataclass
@@ -37,6 +38,7 @@ class SearchResult:
     neural_score: float = 0.0
     lexical_score: float = 0.0
     rerank_score: float = 0.0
+    final_score: float = 0.0
 
 
 class NeuralRetriever:
@@ -130,6 +132,9 @@ class NeuralRetriever:
         rating = str(movie.get("rating", ""))
         media_type = str(movie.get("type", ""))
         country = str(movie.get("country", ""))
+        year_range = str(movie.get("year_range", ""))
+        seasons = str(movie.get("seasons", ""))
+        episodes = str(movie.get("episodes", ""))
 
         genres = movie.get("genres", [])
         if isinstance(genres, list):
@@ -149,9 +154,15 @@ class NeuralRetriever:
         else:
             directors_text = str(directors)
 
+        creators = movie.get("creator", [])
+        if isinstance(creators, list):
+            creators_text = " ".join(str(c) for c in creators)
+        else:
+            creators_text = str(creators)
+
         return (
-            f"{title} {year} {rating} {media_type} {country} "
-            f"{genres_text} {directors_text} {plot} {actors_text}"
+            f"{title} {year} {year_range} {rating} {media_type} {country} "
+            f"{genres_text} {directors_text} {creators_text} {seasons} temporadas {episodes} episodios {plot} {actors_text}"
         ).strip()
 
     def _load_dataset(self) -> List[Dict]:
@@ -255,15 +266,22 @@ class NeuralRetriever:
 
         if has_index_backend and not force_rebuild:
             self.load_vector_db()
+            metadata = {}
+            try:
+                metadata = self._load_metadata()
+            except Exception:
+                metadata = {}
             embeddings_count = int(self.embeddings.shape[0]) if self.embeddings is not None and self.embeddings.ndim > 0 else 0
             documents_count = len(self.documents)
             urls_count = len(self.urls)
+            text_version = int(metadata.get("text_version", 0) or 0)
 
             # Reuse existing vector DB only when all index components are aligned.
             if (
                 documents_count == expected_count
                 and embeddings_count == expected_count
                 and urls_count == expected_count
+                and text_version == TEXT_REPRESENTATION_VERSION
             ):
                 self._build_lexical_index()
                 return
@@ -356,23 +374,34 @@ class NeuralRetriever:
             if idx < 0 or idx >= len(self.documents):
                 continue
             doc = self.documents[idx]
+            normalized_score = float(np.clip((score + 1.0) / 2.0, 0.0, 1.0))
             results.append(
                 SearchResult(
                     rank=rank,
-                    score=float(score),
+                    score=normalized_score,
                     url=str(doc.get("url", "")),
                     title=str(doc.get("title", "Sin titulo")),
                     media_type=str(doc.get("type", "desconocido")),
                     plot=str(doc.get("plot", "")),
-                    neural_score=float(score),
+                    neural_score=normalized_score,
                     lexical_score=0.0,
                     rerank_score=0.0,
+                    final_score=normalized_score,
                 )
             )
 
         return results
 
-    def search_hybrid(self, query: str, top_k: int = 5, alpha: float = 0.7) -> List[SearchResult]:
+    def _extract_media_type_filter(self, query: str) -> str | None:
+        """Extract media type filter from query (pelicula/serie)."""
+        query_lower = query.lower()
+        if any(word in query_lower for word in ["película", "peliculas", "pelicula", "film", "films", "movie", "movies"]):
+            return "pelicula"
+        if any(word in query_lower for word in ["serie", "series", "serial", "show", "shows"]):
+            return "serie"
+        return None
+
+    def search_hybrid(self, query: str, top_k: int = 5, alpha: float = 0.7, media_type_filter: str | None = None) -> List[SearchResult]:
         """Combines neural and lexical signals into a single fused ranking score."""
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
@@ -381,6 +410,10 @@ class NeuralRetriever:
             self.ensure_ready()
 
         alpha = float(np.clip(alpha, 0.0, 1.0))
+        
+        # Auto-detect media type if not explicitly provided
+        if media_type_filter is None:
+            media_type_filter = self._extract_media_type_filter(query)
 
         query_vector = self._encode_query_normalized(query)
         # Con embeddings normalizados, producto punto == coseno.
@@ -388,10 +421,35 @@ class NeuralRetriever:
         lexical_scores = self._compute_lexical_scores(query)
         hybrid_data = compute_hybrid_fusion(neural_scores=neural_scores, lexical_scores=lexical_scores, alpha=alpha)
         fused_scores = hybrid_data["fused_scores"]
+        metadata_scores = np.array(compute_metadata_alignment_scores(query, self.documents), dtype=float)
+        actor_scores = np.array(compute_actor_alignment_scores(query, self.documents), dtype=float)
+        season_scores = np.array(compute_season_alignment_scores(query, self.documents), dtype=float)
+        episode_scores = np.array(compute_episode_alignment_scores(query, self.documents), dtype=float)
+        year_scores = np.array(compute_year_alignment_scores(query, self.documents), dtype=float)
+        country_scores = np.array(compute_country_alignment_scores(query, self.documents), dtype=float)
+        
+        # Apply media type filter if specified
+        type_penalty = np.zeros(len(self.documents), dtype=float)
+        if media_type_filter:
+            for idx, doc in enumerate(self.documents):
+                doc_type = str(doc.get("type", "")).lower()
+                if doc_type and doc_type != media_type_filter:
+                    type_penalty[idx] = -0.8  # Strong penalty for mismatched type
+        
+        primary_scores = (
+            fused_scores
+            + (0.75 * metadata_scores)
+            + (1.35 * actor_scores)
+            + (0.9 * season_scores)
+            + (0.7 * episode_scores)
+            + (0.6 * year_scores)
+            + (0.8 * country_scores)  # Reduced from 2.0
+            + type_penalty
+        )
 
-        top_k = max(1, min(top_k, len(fused_scores)))
+        top_k = max(1, min(top_k, len(primary_scores)))
         sorted_indices = rank_by_positioning(
-            primary_scores=fused_scores,
+            primary_scores=primary_scores,
             query=query,
             docs=self.documents,
             original_positions=np.arange(len(self.documents)),
@@ -401,25 +459,27 @@ class NeuralRetriever:
         results: List[SearchResult] = []
         for rank, idx in enumerate(sorted_indices, start=1):
             doc = self.documents[idx]
+            normalized_score = float(np.clip(fused_scores[idx], 0.0, 1.0))
             results.append(
                 SearchResult(
                     rank=rank,
-                    score=float(fused_scores[idx]),
+                    score=normalized_score,
                     url=str(doc.get("url", "")),
                     title=str(doc.get("title", "Sin titulo")),
                     media_type=str(doc.get("type", "desconocido")),
                     plot=str(doc.get("plot", "")),
-                    neural_score=float(hybrid_data["neural_scores"][idx]),
-                    lexical_score=float(hybrid_data["lexical_scores"][idx]),
+                    neural_score=float(np.clip(hybrid_data["neural_norm"][idx], 0.0, 1.0)),
+                    lexical_score=float(np.clip(hybrid_data["lexical_norm"][idx], 0.0, 1.0)),
                     rerank_score=0.0,
+                    final_score=normalized_score,
                 )
             )
 
         return results
 
-    def retrieve_candidates(self, query: str, candidate_k: int = 50, alpha: float = 0.9) -> List[SearchResult]:
+    def retrieve_candidates(self, query: str, candidate_k: int = 50, alpha: float = 0.9, media_type_filter: str | None = None) -> List[SearchResult]:
         """Retrieves a broad candidate set using hybrid search for later reranking."""
-        return self.search_hybrid(query=query, top_k=candidate_k, alpha=alpha)
+        return self.search_hybrid(query=query, top_k=candidate_k, alpha=alpha, media_type_filter=media_type_filter)
 
     def rerank_candidates(
         self,
@@ -459,8 +519,35 @@ class NeuralRetriever:
             rerank_raw = np.zeros(len(candidates), dtype=float)
             rerank_data = compute_rerank_fusion(base_scores=base_scores, rerank_raw=rerank_raw, rerank_weight=rerank_weight)
             final_scores = rerank_data["final_scores"]
-        top_k = max(1, min(top_k, len(candidates)))
+
         candidate_docs = [self._resolve_result_document(candidate) for candidate in candidates]
+        metadata_scores = np.array(compute_metadata_alignment_scores(query, candidate_docs), dtype=float)
+        actor_scores = np.array(compute_actor_alignment_scores(query, candidate_docs), dtype=float)
+        season_scores = np.array(compute_season_alignment_scores(query, candidate_docs), dtype=float)
+        episode_scores = np.array(compute_episode_alignment_scores(query, candidate_docs), dtype=float)
+        year_scores = np.array(compute_year_alignment_scores(query, candidate_docs), dtype=float)
+        country_scores = np.array(compute_country_alignment_scores(query, candidate_docs), dtype=float)
+        
+        # Media type penalty for mismatches
+        media_type_filter = self._extract_media_type_filter(query)
+        type_penalty = np.zeros(len(candidates), dtype=float)
+        if media_type_filter:
+            for idx, doc in enumerate(candidate_docs):
+                doc_type = str(doc.get("type", "")).lower()
+                if doc_type and doc_type != media_type_filter:
+                    type_penalty[idx] = -0.6
+        
+        final_scores = (
+            final_scores
+            + (0.20 * metadata_scores)
+            + (0.55 * actor_scores)
+            + (0.45 * season_scores)
+            + (0.55 * episode_scores)
+            + (0.40 * year_scores)
+            + (0.5 * country_scores)  # Reduced from 1.2
+            + type_penalty
+        )
+        top_k = max(1, min(top_k, len(candidates)))
         sorted_idx = rank_by_positioning(
             primary_scores=final_scores,
             query=query,
@@ -472,17 +559,19 @@ class NeuralRetriever:
         reranked: List[SearchResult] = []
         for rank, idx in enumerate(sorted_idx, start=1):
             item = candidates[idx]
+            normalized_final_score = float(np.clip(final_scores[idx], 0.0, 1.0))
             reranked.append(
                 SearchResult(
                     rank=rank,
-                    score=float(final_scores[idx]),
+                    score=normalized_final_score,
                     url=item.url,
                     title=item.title,
                     media_type=item.media_type,
                     plot=item.plot,
-                    neural_score=item.neural_score,
-                    lexical_score=item.lexical_score,
-                    rerank_score=float(rerank_raw[idx]),
+                    neural_score=float(np.clip(item.neural_score, 0.0, 1.0)),
+                    lexical_score=float(np.clip(item.lexical_score, 0.0, 1.0)),
+                    rerank_score=float(np.clip(sigmoid(rerank_raw[idx]), 0.0, 1.0)),
+                    final_score=normalized_final_score,
                 )
             )
 
@@ -498,7 +587,8 @@ class NeuralRetriever:
         reranker_model_name: str | None = None,
     ) -> List[SearchResult]:
         """Executes the full retrieval pipeline: candidate retrieval + reranking."""
-        candidates = self.retrieve_candidates(query=query, candidate_k=max(candidate_k, top_k), alpha=alpha)
+        media_type_filter = self._extract_media_type_filter(query)
+        candidates = self.retrieve_candidates(query=query, candidate_k=max(candidate_k, top_k), alpha=alpha, media_type_filter=media_type_filter)
         return self.rerank_candidates(
             query=query,
             candidates=candidates,

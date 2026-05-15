@@ -1,9 +1,12 @@
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-from recommendation_module.content_extractor import extract_doc_feature
+from recommendation_module.content_extractor import extract_doc_feature, clean_text
 from neural_based_model.neural_retriever import NeuralRetriever, SearchResult
 from recommendation_module.user_profile import User
 import random
+import numpy as np
+import re
+import unicodedata
 
 class ScoredDocument:
     """Documento con múltiples dimensiones de puntuación para personalización."""
@@ -14,20 +17,48 @@ class ScoredDocument:
         self.recency_score = 0.0         # Similaridad con búsquedas recientes
         self.type_score = 0.0            # Coincidencia con tipo preferido (serie/película)
         self.viewed_penalty = 0.0        # Penalización si ya fue visto
+        self.already_viewed = False      # Marca explícita de visualización previa
+        self.metadata_score = 0.0        # Metadata signals del retriever (país, actores, temporadas, etc.)
+        self.exact_title_match = False    # Coincidencia literal con el título consultado
         self.final_score = 0.0           # Puntaje final ponderado
+
+
+def _normalize_plain_text(value):
+    """Normaliza texto para comparaciones exactas de entidades y títulos."""
+    if not value:
+        return ""
+    text = str(value).lower()
+    text = unicodedata.normalize("NFKD", text).encode("ascii", "ignore").decode("utf-8", "ignore")
+    text = re.sub(r"[^a-z0-9\s]", " ", text)
+    return re.sub(r"\s+", " ", text).strip()
 
 class RecommendationEngine:
     """Motor de recomendación personalizado basado en perfil de usuario y contenido."""
     
-    def __init__(self, content_weight=0.45, genre_weight=0.25, recency_weight=0.15, 
-                 type_weight=0.1, viewed_penalty=0.05, min_score_threshold=0.0):
+    def __init__(self, content_weight=0.15, genre_weight=0.15, recency_weight=0.05, 
+                 type_weight=0.10, viewed_penalty=0.05, min_score_threshold=0.0, metadata_weight=0.55):
+        """Inicializa el motor de recomendación con pesos configurables.
+        
+        PESOS UTILIZADOS (deben sumar ~1.0):
+        - metadata_weight (0.55): Preserva relevancia del retriever como signal principal
+        - content_weight (0.15): Similitud TF-IDF con historial del usuario
+        - genre_weight (0.15): Coincidencia con géneros preferidos del usuario
+        - type_weight (0.10): Coincidencia con tipo preferido (serie/película)
+        - recency_weight (0.05): Boost de búsquedas recientes
+        - viewed_penalty (0.05): Penalización si el contenido ya fue visto
+        
+        NOTA: metadata_weight se incrementa automáticamente a 0.85 para búsquedas 
+        de metadata específica (director, actor, creador) para preservar ranking.
+        """
         self.content_weight = content_weight
         self.genre_weight = genre_weight
         self.recency_weight = recency_weight
         self.type_weight = type_weight
         self.viewed_penalty = viewed_penalty
         self.min_score_threshold = min_score_threshold
-        self.tfidf_vectorizer = None
+        self.metadata_weight = metadata_weight
+        self._tfidf_vectorizer = None
+        self._tfidf_vocab = None
 
     def doc_get(self, doc, field, default=None):
         """Accede a campos de documento (dict o objeto)."""
@@ -80,12 +111,10 @@ class RecommendationEngine:
         }
     
     def calculate_content_similarity(self, user_profile, documents):
-        """Calcula similitud TF-IDF entre perfil del usuario y documentos."""
-        if self.tfidf_vectorizer is None:
-            self.tfidf_vectorizer = TfidfVectorizer()
-
+        """Calcula similitud TF-IDF entre perfil del usuario y documentos. Cachea vectorizer."""
         normalized_profile = self.normalize_user_profile(user_profile)
         user_text = normalized_profile["combined_terms"].strip()
+        user_text = " ".join(clean_text(user_text))
 
         if not documents:
             return []
@@ -113,23 +142,58 @@ class RecommendationEngine:
         if not user_text or not any(texts[1:]):
             return [0.0] * len(documents)
 
-        self.tfidf_vectorizer = TfidfVectorizer()
-        tfidf_matrix = self.tfidf_vectorizer.fit_transform(texts)
+        # Cachear vectorizer para evitar refitting innecesario
+        if self._tfidf_vectorizer is None:
+            self._tfidf_vectorizer = TfidfVectorizer()
+            tfidf_matrix = self._tfidf_vectorizer.fit_transform(texts)
+        else:
+            try:
+                # Usar vocabulario cacheado si es posible
+                tfidf_matrix = self._tfidf_vectorizer.transform(texts)
+            except ValueError:
+                # Si hay términos nuevos, refitear
+                self._tfidf_vectorizer = TfidfVectorizer()
+                tfidf_matrix = self._tfidf_vectorizer.fit_transform(texts)
+        
         similarities = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:]).flatten()
         return similarities.tolist()
 
     def calculate_final_score(self, scored_doc):
-        """Calcula puntuación final ponderada."""
+        """Calcula puntuación final ponderada, preservando ranking del retriever como signal principal.
+        
+        El score final se mantiene en [0, 1] para ser compatible con la UI y el ranking.
+        """
+        if scored_doc.exact_title_match:
+            scored_doc.final_score = 1.0
+            return scored_doc.final_score
+
         weighted_score = (
-            self.content_weight * float(scored_doc.content_score)
+            self.metadata_weight * float(scored_doc.metadata_score)  # PRIORITARIO
+            + self.content_weight * float(scored_doc.content_score)
             + self.genre_weight * float(scored_doc.genre_score)
             + self.recency_weight * float(scored_doc.recency_score)
             + self.type_weight * float(scored_doc.type_score)
         )
+        
         # Aplicar penalización por visualización previa
-        weighted_score -= scored_doc.viewed_penalty
-        scored_doc.final_score = max(0.0, min(1.0, weighted_score))
+        weighted_score -= float(scored_doc.viewed_penalty)
+        scored_doc.final_score = float(np.clip(weighted_score, 0.0, 1.0))
         return scored_doc.final_score
+
+    def _materialize_document_with_score(self, doc, final_score):
+        """Adjunta el final_score al documento devuelto sin perder sus campos originales."""
+        if isinstance(doc, dict):
+            materialized = dict(doc)
+            materialized["final_score"] = float(final_score)
+            # Mantener score por compatibilidad, pero no sobreescribir el score base si existe.
+            materialized.setdefault("score", materialized.get("score", float(final_score)))
+            return materialized
+
+        try:
+            setattr(doc, "final_score", float(final_score))
+        except Exception:
+            pass
+        return doc
     
     def calculate_genre_similarity(self, user_genres, document_genres):
         """Calcula similitud entre géneros preferidos del usuario y del documento."""
@@ -147,6 +211,35 @@ class RecommendationEngine:
             return 0.0
         
         score = matches / len(doc_genres_lower)
+        return min(1.0, score)
+    
+    def calculate_weighted_genre_score(self, user_genres, document_genres):
+        """Calcula similitud ponderada entre géneros (considera preferencia de usuario).
+        
+        A diferencia de calculate_genre_similarity, pesa los géneros según la preferencia del usuario.
+        Géneros más preferidos tienen mayor impacto en la puntuación final.
+        """
+        if not user_genres:
+            return 0.5  # Neutral si el usuario no tiene preferencias
+        
+        if not document_genres:
+            return 0.0
+        
+        # Suma de pesos de géneros coincidentes
+        matching_weight = 0.0
+        doc_genres_lower = {str(g).lower() for g in document_genres}
+        
+        for genre, weight in user_genres.items():
+            if genre.lower() in doc_genres_lower:
+                matching_weight += weight
+        
+        # Suma total de preferencias del usuario
+        total_weight = sum(user_genres.values())
+        
+        if total_weight == 0:
+            return 0.0
+        
+        score = matching_weight / total_weight
         return min(1.0, score)
     
     def calculate_type_match(self, user_type, document_type):
@@ -177,8 +270,8 @@ class RecommendationEngine:
                 return min(1.0, score)
         return 0.0
     
-    def content_based_score(self, user_profile, documents):
-        """Calcula puntuaciones de contenido para múltiples dimensiones."""
+    def content_based_score(self, user_profile, documents, query: str = None):
+        """Calcula puntuaciones de contenido para múltiples dimensiones, preservando metadata signals."""
         if not documents:
             return []
         
@@ -196,7 +289,7 @@ class RecommendationEngine:
             # Género
             doc_genres = self.doc_get(doc, "genres", [])
             user_genres = normalized_profile.get("genre_preferences", {})
-            scored_doc.genre_score = self.calculate_genre_similarity(user_genres, doc_genres)
+            scored_doc.genre_score = self.calculate_weighted_genre_score(user_genres, doc_genres)
             
             # Tipo (serie/película)
             doc_type = self.doc_get(doc, "media_type", self.doc_get(doc, "type", ""))
@@ -207,27 +300,110 @@ class RecommendationEngine:
             doc_title = self.doc_get(doc, "title", "")
             search_history = normalized_profile.get("search_history", [])
             scored_doc.recency_score = self.calculate_recency_boost(search_history, doc_title)
+
+            # Coincidencia literal de título: si la query contiene el título exacto,
+            # el resultado debe mantenerse en la primera posición.
+            if query:
+                query_plain = _normalize_plain_text(query)
+                title_plain = _normalize_plain_text(doc_title)
+                if title_plain and title_plain in query_plain:
+                    scored_doc.exact_title_match = True
+            
+            # Preservar metadata signals del retriever (si están disponibles en SearchResult)
+            # Intentar obtener score del retriever (puede ser .score, .final_score, o estar normalizado 0-1)
+            # IMPORTANTE: El retriever asegura que .final_score está en rango [0, 1]
+            retriever_score = getattr(doc, 'final_score', getattr(doc, 'score', 0.0))
+            if retriever_score > 0:
+                # final_score está ya normalizado a [0, 1] por el retriever
+                scored_doc.metadata_score = min(1.0, float(retriever_score))
+            else:
+                scored_doc.metadata_score = 0.0
             
             # Penalización por visualización
             doc_url = str(self.doc_get(doc, "url", "")).lower().strip()
             if doc_url in viewed_urls_lower:
                 scored_doc.viewed_penalty = self.viewed_penalty
+                scored_doc.already_viewed = True
             
             self.calculate_final_score(scored_doc)
             scored_documents.append(scored_doc)
 
         return scored_documents    
     
-    def personalize_results(self, user, retriever_results, top_k=10, diversity_ratio=0.3):
+    def _is_metadata_specific_query(self, query: str) -> bool:
+        """Detecta si la query busca metadata específica (director, actor, creador, etc.).
+        
+        Ejemplos:
+        - 'películas de joe johnston' → True (director específico)
+        - 'series de alex pina' → True (creador específico)
+        - 'películas protagonizadas por elle fanning' → True (actor específico)
+        - 'películas de romance' → False (género general)
+        - 'series de españa' → False (país general)
+        """
+        q = query.lower().strip()
+        
+        # Palabras clave que indican búsqueda de metadata específica
+        metadata_keywords = [
+            'de ', 'director', 'creador', 'protagonizada', 'actor', 'actriz',
+            'dirigida', 'creada', 'trabajo', 'trabajos'
+        ]
+        
+        # Si contiene "de " + nombre propio (típicamente capitalizado)
+        if ' de ' in q:
+            parts = q.split(' de ')
+            if len(parts) > 1:
+                # Siguiente parte después de "de" probablemente sea nombre propio
+                name_part = parts[-1].strip()
+                # Si empieza con mayúscula o es un nombre, es metadata
+                if name_part and (name_part[0].isupper() or any(c.isalpha() for c in name_part)):
+                    return True
+        
+        # Si contiene palabras clave de actor/director/creador
+        for keyword in metadata_keywords:
+            if keyword in q:
+                return True
+        
+        return False
+    
+    def personalize_results(self, user, retriever_results, top_k=10, diversity_ratio=0.3, query: str = None):
         """Personaliza resultados agregando diversidad (exploración + explotación).
         
         diversity_ratio: proporción de resultados exploratoria (baja similitud) vs explotación (alta similitud).
                         0.3 = 30% exploración, 70% explotación.
+        
+        query: Query actual (opcional). Si es metadata-específica, preserva ranking del retriever.
         """
+        # Detectar si es búsqueda de metadata específica
+        is_metadata_query = query is not None and self._is_metadata_specific_query(query)
+
+        # Preparar mapeo de ranks originales (url -> rank) para preservación de top-N
+        original_rank_map = {}
+        try:
+            for r in retriever_results:
+                if isinstance(r, dict):
+                    url = (r.get('url', '') or '').lower().strip()
+                    rank = r.get('original_rank', r.get('rank'))
+                else:
+                    url = (getattr(r, 'url', '') or '').lower().strip()
+                    rank = getattr(r, 'rank', None)
+                if url:
+                    try:
+                        original_rank_map[url] = int(rank) if rank is not None else None
+                    except Exception:
+                        original_rank_map[url] = None
+        except Exception:
+            original_rank_map = {}
+
+        # Si es búsqueda de metadata, aumentar metadata_weight para preservar ranking
+        if is_metadata_query:
+            original_metadata_weight = self.metadata_weight
+            self.metadata_weight = 0.85  # Casi todo peso en metadata (preserva ranking retriever)
+        else:
+            original_metadata_weight = None
         if not retriever_results:
             return []
 
-        scored_docs = self.content_based_score(user, retriever_results)
+        scored_docs = self.content_based_score(user, retriever_results, query=query)
         
         # Filtrar por threshold mínimo
         filtered_docs = [
@@ -255,42 +431,122 @@ class RecommendationEngine:
         else:
             result = sorted_docs[:top_k]
         
-        return [doc.document for doc in result]
+        # Reordenar por score final para que la salida sea coherente y estable.
+        result = sorted(result, key=lambda doc: doc.final_score, reverse=True)
+        
+        # Si es query de metadata, forzar preservación de los top-2 del retriever
+        if is_metadata_query and original_rank_map:
+            # Determinar URLs a preservar (rank 1 y 2) en orden
+            preserve_urls = [u for u, r in sorted(original_rank_map.items(), key=lambda x: (x[1] if x[1] is not None else 9999)) if r in (1, 2)]
+            preserve_urls = [u for u in preserve_urls if u]
+
+            if preserve_urls:
+                ordered = []
+                seen = set()
+                # Añadir primero los preservados en el orden original
+                for pu in preserve_urls:
+                    for doc in result:
+                        doc_url = (str(self.doc_get(doc.document, 'url', '')).lower().strip())
+                        if doc_url == pu and doc_url not in seen:
+                            ordered.append(doc)
+                            seen.add(doc_url)
+                            break
+
+                # Añadir el resto manteniendo el orden por score
+                for doc in result:
+                    doc_url = (str(self.doc_get(doc.document, 'url', '')).lower().strip())
+                    if doc_url not in seen:
+                        ordered.append(doc)
+
+                # Recortar al top_k pedido
+                result = ordered[:top_k]
+
+        # Restaurar weights originales
+        if original_metadata_weight is not None:
+            self.metadata_weight = original_metadata_weight
+
+        return [self._materialize_document_with_score(doc.document, doc.final_score) for doc in result]
 def _build_personalized_query(user_profile: User) -> str:
     """Construye una query sintética mejorada desde el perfil del usuario.
     
-    Prioridades:
-    1. Top-3 géneros (contexto temático principal)
-    2. Top-5 términos (intereses específicos)
-    3. Top-1 tipo (serie o película)
+    Estructura mejorada:
+    - Top-3 géneros (contexto temático principal)
+    - Top-5 términos (intereses específicos)
+    - Top-1 tipo (serie o película)
     
-    Los términos se ponderan implícitamente al incluirlos primero.
+    Resultado: consulta más estructurada para mejorar relevancia del retriever.
     """
     if user_profile is None:
-        return "películas series"
-    
-    query_parts = []
+        return "peliculas series"
     
     # Top-3 géneros - contexto temático principal
     top_genres = [g for g, _ in sorted(user_profile.genre_preferences.items(), key=lambda x: -x[1])[:3]]
-    if top_genres:
-        query_parts.extend(top_genres)
     
     # Top-5 términos - intereses específicos más relevantes
     top_terms = [t for t, _ in sorted(user_profile.term_preferences.items(), key=lambda x: -x[1])[:5]]
-    if top_terms:
-        query_parts.extend(top_terms)
     
     # Top-1 tipo - filtro por tipo de contenido
     top_types = [t for t, _ in sorted(user_profile.type_preferences.items(), key=lambda x: -x[1])[:1]]
+    
+    # Construir query con estructura explícita
+    query_parts = []
+    
+    # Géneros primero (mayor prioridad)
+    if top_genres:
+        query_parts.append(" ".join(top_genres))
+    
+    # Términos segundo (media prioridad)
+    if top_terms:
+        query_parts.append(" ".join(top_terms))
+    
+    # Tipo último (menor prioridad pero útil como filtro)
     if top_types:
         query_parts.extend(top_types)
     
-    query = " ".join(query_parts) if query_parts else "películas series"
+    # Unir con espacios: cada grupo está separado naturalmente
+    query = " ".join(query_parts) if query_parts else "peliculas series"
     return query.strip()
 
 
-def recommend_for_user(user_profile: User, top_k: int = 5, diversity_ratio: float = 0.3) -> list[SearchResult]:
+def _result_to_document(result, retriever: NeuralRetriever | None = None):
+    """Convierte un SearchResult o dict en un documento dict completo cuando sea posible."""
+    if isinstance(result, dict):
+        # Preserve any existing rank info as original_rank for later use
+        doc = dict(result)
+        if 'original_rank' not in doc:
+            doc['original_rank'] = doc.get('rank', None)
+        return doc
+
+    if retriever is not None:
+        try:
+            doc_idx = retriever.url_to_doc_idx.get(getattr(result, "url", ""))
+            if doc_idx is not None and 0 <= doc_idx < len(retriever.documents):
+                doc = retriever.documents[doc_idx]
+                if isinstance(doc, dict):
+                    return dict(doc)
+        except Exception:
+            pass
+
+    return {
+        "url": getattr(result, "url", ""),
+        "title": getattr(result, "title", "Sin titulo"),
+        "type": getattr(result, "media_type", getattr(result, "type", "desconocido")),
+        "plot": getattr(result, "plot", ""),
+        "genres": getattr(result, "genres", []),
+        "actors": getattr(result, "actors", []),
+        "director": getattr(result, "director", []),
+        "final_score": getattr(result, "final_score", getattr(result, "score", 0.0)),
+        "score": getattr(result, "score", 0.0),
+        "original_rank": getattr(result, "rank", None),
+    }
+
+
+def recommend_for_user(
+    user_profile: User,
+    top_k: int = 5,
+    diversity_ratio: float = 0.3,
+    retriever: NeuralRetriever | None = None,
+) -> list[SearchResult]:
     """Recomendaciones personalizadas basadas en perfil del usuario.
     
     Args:
@@ -308,7 +564,7 @@ def recommend_for_user(user_profile: User, top_k: int = 5, diversity_ratio: floa
     query = _build_personalized_query(user_profile)
     
     try:
-        retriever = NeuralRetriever()
+        retriever = retriever or NeuralRetriever()
         retriever.ensure_ready()
         
         # 2. Obtener más candidatos para poder filtrar y personalizar
@@ -327,10 +583,12 @@ def recommend_for_user(user_profile: User, top_k: int = 5, diversity_ratio: floa
         excluded_urls = clicked_urls | viewed_urls  # Unión de ambas
         
         # 4. Filtrar resultados que el usuario ya ha visto o clickeado
-        filtered_results = [
-            r for r in raw_results 
-            if (getattr(r, 'url', '') or '').strip().lower() not in excluded_urls
-        ]
+        filtered_results = []
+        for r in raw_results:
+            result_url = (getattr(r, 'url', '') or '').strip().lower()
+            if result_url in excluded_urls:
+                continue
+            filtered_results.append(_result_to_document(r, retriever=retriever))
         
         # 5. Personalizar con RecommendationEngine (re-puntuación + diversidad)
         engine = RecommendationEngine()
@@ -340,8 +598,29 @@ def recommend_for_user(user_profile: User, top_k: int = 5, diversity_ratio: floa
             top_k=top_k,
             diversity_ratio=diversity_ratio
         )
-        
-        return personalized
+
+        # Devolver SearchResult-like objects para compatibilidad con el resto del código y tests
+        final_results: list[SearchResult] = []
+        for rank, item in enumerate(personalized, start=1):
+            if isinstance(item, dict):
+                final_results.append(
+                    SearchResult(
+                        rank=rank,
+                        score=float(item.get("final_score", item.get("score", 0.0))),
+                        url=str(item.get("url", "")),
+                        title=str(item.get("title", "Sin titulo")),
+                        media_type=str(item.get("type", "desconocido")),
+                        plot=str(item.get("plot", "")),
+                        neural_score=float(item.get("score", item.get("final_score", 0.0))),
+                        lexical_score=0.0,
+                        rerank_score=0.0,
+                        final_score=float(item.get("final_score", item.get("score", 0.0))),
+                    )
+                )
+            else:
+                final_results.append(item)
+
+        return final_results
         
     except Exception as e:
         print(f"Error en recommend_for_user: {e}")

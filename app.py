@@ -297,9 +297,14 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
     except Exception:
         doc_meta = {}
 
-    title = html.escape(item.title or "Sin título")
-    kind = content_kind(item.media_type)
-    summary_source = summary_override if summary_override else (item.plot or getattr(item, 'description', '') or '')
+    title_value = getattr(item, "title", "") or "Sin título"
+    media_type_value = getattr(item, "media_type", "") or ""
+    plot_value = getattr(item, "plot", "") or ""
+    score_value = getattr(item, "final_score", getattr(item, "score", 0.0))
+
+    title = html.escape(title_value)
+    kind = content_kind(media_type_value)
+    summary_source = summary_override if summary_override else (plot_value or getattr(item, 'description', '') or '')
     snippet_limit = 380
     cleaned_summary = (summary_source or "").strip()
     is_long = len(cleaned_summary) > snippet_limit
@@ -313,9 +318,14 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
             summary = html.escape(cleaned_summary)
     else:
         summary = html.escape(cleaned_summary) if cleaned_summary else "Sin sinopsis disponible."
-    score_pct = max(0.0, min(100.0, float(item.score) * 100.0))
-    label, color = score_label(float(item.score or 0.0))
-    url = (item.url or "").strip()
+    try:
+        score_float = float(score_value)
+    except Exception:
+        score_float = 0.0
+    score_float = max(0.0, min(1.0, score_float))
+    score_pct = max(0.0, min(100.0, score_float * 100.0))
+    label, color = score_label(score_float)
+    url = (getattr(item, "url", "") or "").strip()
     year_range = doc_meta.get("year_range")
     year_raw = doc_meta.get("year")
     if year_range:
@@ -333,7 +343,7 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
     rating_text = format_rating_value(doc_meta.get("rating"))
 
     type_icon = "🎬" if kind == "movie" else "📺" if kind == "series" else "🎭"
-    type_label = ("Película" if kind == "movie" else "Serie" if kind == "series" else (item.media_type or "").capitalize())
+    type_label = ("Película" if kind == "movie" else "Serie" if kind == "series" else media_type_value.capitalize())
 
     source_html = ""
 
@@ -392,7 +402,7 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
                         except Exception:
                             doc_meta = None
 
-                        doc_type = (doc_meta.get('type') or doc_meta.get('media_type') or item.media_type) if doc_meta else item.media_type
+                        doc_type = (doc_meta.get('type') or doc_meta.get('media_type') or getattr(item, 'media_type', '')) if doc_meta else getattr(item, 'media_type', '')
                         media_type_lower = (doc_type or '').lower()
                         if "serie" in media_type_lower:
                             user_profile.add_type_preference("serie")
@@ -495,7 +505,7 @@ def run_query(
     if user_profile is not None and results:
         try:
             recommender = RecommendationEngine()
-            personalized = recommender.personalize_results(user_profile, results, top_k=top_k)
+            personalized = recommender.personalize_results(user_profile, results, top_k=top_k, query=query)
             if personalized:
                 results = personalized
         except Exception:
@@ -680,13 +690,13 @@ def show_app() -> None:
         top_result = results[0]
         type_counts: dict[str, int] = {}
         for item in results:
-            k = (item.media_type or "desconocido")
+            k = (getattr(item, 'media_type', None) or "desconocido")
             type_counts[k] = type_counts.get(k, 0) + 1
         dominant = max(type_counts, key=type_counts.get)
 
         metrics_html = "".join([
             render_metric("Resultados", str(len(results))),
-            render_metric("Mejor relevancia", f"{top_result.score:.0%}"),
+            render_metric("Mejor relevancia", f"{float(getattr(top_result, 'final_score', getattr(top_result, 'score', 0.0))):.0%}"),
             render_metric("Tipo dominante", dominant.capitalize()),
             render_metric("Docs indexados", str(len(retriever.documents))),
         ])
@@ -783,7 +793,7 @@ def show_app() -> None:
 
         # Display results with selected sorting
         for rank, item in enumerate(results_sorted, start=1):
-            url = (item.url or "").strip()
+            url = (getattr(item, 'url', '') or "").strip()
             rag_summary = last_rag_descriptions.get(url) if url else None
             render_result_card(item, rank, summary_override=rag_summary)
 
