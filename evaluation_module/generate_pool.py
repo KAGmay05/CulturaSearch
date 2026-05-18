@@ -2,7 +2,7 @@ import csv
 from neural_based_model.neural_retriever import NeuralRetriever
 from evaluation_module.evaluator import RetrievalEvaluator
 
-def generar_pool_csv(salida_csv="pool_a_anotar.csv", top_k=15):
+def generar_pool_csv(salida_csv="pool_a_anotar.csv", top_k=10):
     print("Inicializando Retriever (esto puede tardar unos segundos)...")
     # Ajusta los parámetros si tu NeuralRetriever requiere algo específico al inicializar
     retriever = NeuralRetriever() 

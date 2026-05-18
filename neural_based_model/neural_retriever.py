@@ -571,7 +571,7 @@ class NeuralRetriever:
                     neural_score=float(np.clip(item.neural_score, 0.0, 1.0)),
                     lexical_score=float(np.clip(item.lexical_score, 0.0, 1.0)),
                     rerank_score=float(np.clip(sigmoid(rerank_raw[idx]), 0.0, 1.0)),
-                    final_score=normalized_final_score,
+                    final_score=float(final_scores[idx]),
                 )
             )
 
