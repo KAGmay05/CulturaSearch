@@ -203,6 +203,7 @@ def clear_search() -> None:
     st.session_state["last_results"] = []
     st.session_state["last_query"] = ""
     st.session_state["last_rag_descriptions"] = {}
+    st.session_state["last_rag_query_hash"] = None
 
 
 def score_label(score: float) -> tuple[str, str]:
@@ -345,8 +346,6 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
     type_icon = "🎬" if kind == "movie" else "📺" if kind == "series" else "🎭"
     type_label = ("Película" if kind == "movie" else "Serie" if kind == "series" else media_type_value.capitalize())
 
-    source_html = ""
-
     st.markdown(
         f"""
         <div class="cs-card">
@@ -369,7 +368,6 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
                 <div class="cs-bar-fill" style="width:{score_pct:.1f}%;background:linear-gradient(90deg,{color},{color}88);"></div>
             </div>
             <p class="cs-synopsis">{summary}</p>
-            {source_html}
         </div>
         """,
         unsafe_allow_html=True,
@@ -483,10 +481,21 @@ def run_query(
     rerank_weight: float,
 ) -> list[SearchResult]:
     retriever = get_retriever()
+    rag = get_rag_pipeline()
+    search_query = query
+
+    try:
+        if getattr(rag, "rewrite_query", False):
+            search_query = rag.rewrite_search_query(query)
+    except Exception:
+        search_query = query
+
+    if search_query.strip() and search_query.strip() != (query or "").strip():
+        print(f"[RAG] Consulta optimizada: {search_query}")
 
     if use_web_expansion:
         results = retriever.search_with_web_expansion(
-            query=query,
+            query=search_query,
             top_k=top_k,
             candidate_k=candidate_k,
             alpha=alpha,
@@ -494,7 +503,7 @@ def run_query(
         )
     else:
         results = retriever.search_advanced(
-            query=query,
+            query=search_query,
             top_k=top_k,
             candidate_k=candidate_k,
             alpha=alpha,
@@ -555,7 +564,7 @@ def show_app() -> None:
     user_name = st.session_state.get("user_name", "Usuario")
     user_id = st.session_state.get("user_id", "")
 
-    for key, default in [("search_query", ""), ("last_results", []), ("last_query", ""), ("last_web_mode", False), ("sort_option", "relevance"), ("results_sorted", []), ("last_rag_descriptions", {})]:
+    for key, default in [("search_query", ""), ("last_results", []), ("last_query", ""), ("last_web_mode", False), ("sort_option", "relevance"), ("results_sorted", []), ("last_rag_descriptions", {}), ("last_rag_query_hash", None)]:
         if key not in st.session_state:
             st.session_state[key] = default
 
@@ -625,6 +634,7 @@ def show_app() -> None:
         if not (query or "").strip():
             st.error("Escribe algo antes de buscar.")
         else:
+            # --- Fase 1: Retriever (rápido) ---
             with st.spinner("Buscando los mejores resultados para ti..."):
                 try:
                     res = run_query(
@@ -635,27 +645,46 @@ def show_app() -> None:
                         alpha=alpha,
                         rerank_weight=rerank_weight,
                     )
-
-                    rag = get_rag_pipeline()
-                    rag_descriptions = rag.generate_descriptions(query.strip(), res)
-
                     try:
                         if user_profile is not None:
                             user_profile.register_search(query.strip())
                             save_user(user_profile)
                     except Exception:
                         pass
-
                     st.session_state["last_results"] = res
                     st.session_state["last_query"] = query.strip()
                     st.session_state["last_web_mode"] = use_web_expansion
-                    st.session_state["last_rag_descriptions"] = rag_descriptions
-
+                    # Invalidar cache LLM para esta nueva query
+                    st.session_state["last_rag_descriptions"] = {}
+                    st.session_state["last_rag_query_hash"] = None
                     if not res:
                         st.warning("No se encontraron resultados. Intenta con otros términos.")
                 except Exception as exc:
                     st.error(f"Error al buscar: {exc}")
                     st.session_state["last_results"] = []
+
+            # --- Fase 2: LLM (descripciones por tarjeta, solo si hay resultados) ---
+            res = st.session_state.get("last_results", [])
+            if res:
+                query_hash = hash((query.strip(), tuple(getattr(r, 'url', '') for r in res)))
+                if st.session_state.get("last_rag_query_hash") != query_hash:
+                    rag = get_rag_pipeline()
+                    # Refrescar disponibilidad de Ollama en caso de que pipeline sea antiguo
+                    try:
+                        if not hasattr(rag, 'generate_descriptions'):
+                            get_rag_pipeline.clear()
+                            rag = get_rag_pipeline()
+                        if getattr(rag, 'generator', None) is not None and not rag.generator.is_available:
+                            rag.generator.is_available = rag.generator._check_available()
+                    except Exception:
+                        pass
+                    with st.spinner("Generando descripciones con IA..."):
+                        try:
+                            rag_descriptions = rag.generate_descriptions(query.strip(), res)
+                        except Exception:
+                            rag_descriptions = {}
+                    st.session_state["last_rag_descriptions"] = rag_descriptions
+                    st.session_state["last_rag_query_hash"] = query_hash
 
     results: list[SearchResult] = st.session_state.get("last_results", [])
     last_query: str = st.session_state.get("last_query", "")

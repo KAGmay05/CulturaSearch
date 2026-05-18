@@ -18,7 +18,30 @@
       "juego de tronos",
       "peliculas de joe johnston",
       "peliculas de joe johnston",
-      "peliculas de joe johnston"
+      "peliculas de joe johnston",
+      "friends",
+      "friends",
+      "recomiendame 5 series como friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "recomiendame series parecidas a friends",
+      "series relacionadas con Friends",
+      "series parecidas a friends",
+      "series parecidas a friends",
+      "series parecidas a friends",
+      "series parecidas a friends",
+      "series parecidas a friends",
+      "recomiendame peliculas coreanas",
+      "recomiendame series parecidas a friends",
+      "series parecidas a friends",
+      "series parecidas a friends",
+      "comedias románticas modernas",
+      "dramas históricos con mucho conflicto"
     ],
     "clicked_urls": [
       "https://www.sensacine.com/series/serie-790/",
@@ -55,12 +78,12 @@
       "película": 2
     },
     "term_preferences": {
-      "seri": 1,
+      "seri": 19,
       "policiac": 1,
-      "pelicul": 14,
+      "pelicul": 15,
       "thrill": 1,
-      "recomiendam": 2,
-      "comedi": 1,
+      "recomiendam": 13,
+      "comedi": 2,
       "frances": 1,
       "cienci": 8,
       "ficcion": 8,
@@ -71,7 +94,16 @@
       "jueg": 2,
       "tron": 2,
       "joe": 3,
-      "johnston": 3
+      "johnston": 3,
+      "friends": 20,
+      "parec": 16,
+      "relacion": 1,
+      "corean": 1,
+      "romant": 1,
+      "modern": 1,
+      "dram": 1,
+      "histor": 1,
+      "conflict": 1
     }
   }
 }

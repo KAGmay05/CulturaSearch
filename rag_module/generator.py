@@ -37,7 +37,7 @@ class OllamaGenerator:
                         "num_predict": max_tokens,
                     }
                 },
-                timeout=300
+                timeout=340  # 2 minutos: tiempo razonable para generación en Ollama local
             )
             
             if response.status_code == 200:
