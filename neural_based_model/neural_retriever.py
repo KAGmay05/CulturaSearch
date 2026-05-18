@@ -571,7 +571,7 @@ class NeuralRetriever:
                     neural_score=float(np.clip(item.neural_score, 0.0, 1.0)),
                     lexical_score=float(np.clip(item.lexical_score, 0.0, 1.0)),
                     rerank_score=float(np.clip(sigmoid(rerank_raw[idx]), 0.0, 1.0)),
-                    final_score=normalized_final_score,
+                    final_score=float(final_scores[idx]),
                 )
             )
 
@@ -604,9 +604,9 @@ class NeuralRetriever:
         candidate_k: int = 50,
         alpha: float = 0.9,
         rerank_weight: float = 0.75,
-        min_local_score: float = 0.72,
-        min_lexical_coverage: float = 0.75,
-        hard_min_local_score: float = 0.65,
+        min_local_score: float = 0.68,
+        min_lexical_coverage: float = 0.70,
+        hard_min_local_score: float = 0.60,
         web_max_results: int = 10,
     ) -> List[SearchResult]:
         """Runs local retrieval and triggers web expansion when confidence is low."""

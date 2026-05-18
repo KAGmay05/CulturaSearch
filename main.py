@@ -21,6 +21,12 @@ def run_rag():
     rag_main()
 
 
+def run_evaluation():
+    from evaluation_module.run_evaluation import main as evaluation_main
+
+    evaluation_main()
+
+
 def run_ui():
     command = [sys.executable, "-m", "streamlit", "run", "app.py"]
     try:
@@ -40,7 +46,7 @@ def build_parser():
     parser = argparse.ArgumentParser(description="CulturaSearch - runner general")
     parser.add_argument(
         "command",
-        choices=["crawl", "scrape", "rag", "ui", "full"],
+        choices=["crawl", "scrape", "rag", "ui", "eval", "full"],
         nargs="?",
         default="full",
         help="Subcomando a ejecutar",
@@ -57,6 +63,7 @@ def main():
         "scrape": run_scraper,
         "rag": run_rag,
         "ui": run_ui,
+        "eval": run_evaluation,
         "full": run_full,
     }
 

@@ -131,6 +131,16 @@ python run_retrieval_demo.py
 python -m rag_module.run_rag
 ```
 
+**Evaluación de Recuperación** (Precision, Recall, F1, NDCG, MRR):
+```bash
+python -m evaluation_module.run_evaluation
+```
+
+También puedes ejecutarla desde el lanzador general:
+```bash
+python main.py eval
+```
+
 **Interfaz Visual** (búsqueda en lenguaje natural con ranking visual):
 ```bash
 streamlit run app.py
@@ -170,6 +180,26 @@ results = retriever.search("serie policial con detectives", top_k=5)
 for item in results:
     print(item.rank, item.score, item.title, item.url)
 ```
+
+## Módulo de Evaluación
+
+El módulo de evaluación compara el ranking del recuperador con un conjunto de consultas de prueba y sus juicios de relevancia asociados.
+
+### Métricas Incluidas
+
+- Precision@k
+- Recall@k
+- F1@k
+- NDCG@k
+- MRR@k
+
+### Conjunto de Prueba
+
+Las consultas y sus documentos relevantes están en [evaluation_module/test_queries.json](evaluation_module/test_queries.json).
+
+### Salida
+
+El script imprime un resumen por consulta y un promedio global del sistema, útil para documentar el rendimiento cuantitativo antes y después de cambios en el índice o el reranking.
 
 ### Búsqueda con Expansión Web
 
