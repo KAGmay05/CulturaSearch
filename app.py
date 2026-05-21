@@ -329,9 +329,21 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
     url = (getattr(item, "url", "") or "").strip()
     year_range = doc_meta.get("year_range")
     year_raw = doc_meta.get("year")
+    
+    # Determine if it's a series or movie
+    is_series = "serie" in (media_type_value or "").lower()
+    
     if year_range:
-        # Series: show full range (e.g. "2011-2019" or "2019-presente")
-        year_text = str(year_range)
+        if is_series:
+            # Series: show full range (e.g. "2011-2019" or "2019-presente")
+            year_text = str(year_range)
+        else:
+            # Movies: show only start year (e.g. "2023-presente" → "2023")
+            try:
+                start_year = str(year_range).split('-')[0].strip()
+                year_text = start_year if start_year else str(year_range)
+            except Exception:
+                year_text = str(year_range)
     else:
         year_text = format_year_value(year_raw)
         if year_text == "Sin año":
