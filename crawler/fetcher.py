@@ -6,8 +6,10 @@ import requests
 from requests.adapters import HTTPAdapter
 from urllib3.util.retry import Retry
 
+from crawler.robots import ROBOTS_USER_AGENT, can_fetch_url
+
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "User-Agent": f"{ROBOTS_USER_AGENT}/1.0 (+https://github.com/kelen/CulturaSearch)",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8",
     "Accept-Encoding": "gzip, deflate, br",
     "Accept-Language": "es-ES,es;q=0.9,en;q=0.8",
@@ -68,6 +70,10 @@ def _looks_like_challenge(html):
 
 def _fetch_with_requests(url, retries=3):
     """Intenta obtener HTML usando requests con estrategia de reintentos."""
+    if not can_fetch_url(url):
+        print(f"[WARN] Bloqueado por robots.txt: {url[:80]}...")
+        return None
+
     for attempt in range(1, retries + 1):
         try:
             time.sleep(random.uniform(2.0, 4.0))
@@ -113,6 +119,10 @@ def _fetch_with_playwright(url):
     """Fallback: usa Playwright para ejecutar JS y burlar Cloudflare."""
     if not PLAYWRIGHT_AVAILABLE:
         print("[ERROR] Playwright no está disponible")
+        return None
+
+    if not can_fetch_url(url):
+        print(f"[WARN] Bloqueado por robots.txt: {url[:80]}...")
         return None
 
     try:

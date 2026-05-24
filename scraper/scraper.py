@@ -5,6 +5,8 @@ import time
 import random
 import json
 
+from crawler.robots import can_fetch_url
+
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0)",
     "Mozilla/5.0 (Macintosh)",
@@ -16,6 +18,10 @@ headers = {
 }
 
 def fetch(url):
+
+    if not can_fetch_url(url):
+        print(f"[WARN] Bloqueado por robots.txt: {url}")
+        return None
 
     for _ in range(3):   
 
