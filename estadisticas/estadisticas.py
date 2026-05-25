@@ -1,4 +1,5 @@
 import json
+import re
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
@@ -156,13 +157,91 @@ print(f"Rating Promedio: {rating_promedio:.2f}")
 print(f"Rating Máximo: {rating_max}")
 print(f"Rating Mínimo: {rating_min}")
 
-df['year_clean'] = pd.to_numeric(df['year'], errors='coerce')
+# Normalize year: try 'year' numeric first, then extract from 'year_range' (ej. '2019-presente')
+df['year_clean'] = pd.to_numeric(df.get('year'), errors='coerce')
 
-# 3. Obtener métricas
-anio_min = int(df['year_clean'].min())
-anio_max = int(df['year_clean'].max())
-total_anios = anio_max - anio_min
+def extract_year_from_range(range_val):
+    if isinstance(range_val, str):
+        m = re.search(r"(\d{4})", range_val)
+        if m:
+            return int(m.group(1))
+    return None
+
+# Fill missing year_clean from year_range
+mask_missing = df['year_clean'].isna()
+if mask_missing.any():
+    df.loc[mask_missing, 'year_clean'] = df.loc[mask_missing, 'year_range'].apply(extract_year_from_range)
+
+# Compute metrics safely
+valid_years = df['year_clean'].dropna()
+if valid_years.empty:
+    print("No hay años válidos para calcular min/max.")
+    anio_min = None
+    anio_max = None
+    total_anios = None
+else:
+    anio_min = int(valid_years.min())
+    anio_max = int(valid_years.max())
+    total_anios = anio_max - anio_min
 
 print(f"Año mínimo: {anio_min}")
 print(f"Año máximo: {anio_max}")
 print(f"Amplitud temporal: {total_anios} años")
+
+# --- CONTAR DIRECTORES Y ACTORES ---
+# Normalizamos posibles strings o listas vacías y contamos apariciones
+todos_directores = []
+todos_actores = []
+for _, row in df.iterrows():
+    dirs = row.get('director')
+    acts = row.get('actors')
+
+    # Normalizar distintos tipos posibles en las columnas
+    # director
+    if isinstance(dirs, list):
+        pass
+    elif dirs is None:
+        dirs = []
+    elif isinstance(dirs, float) and pd.isna(dirs):
+        dirs = []
+    elif isinstance(dirs, str):
+        dirs = [dirs]
+    else:
+        dirs = [dirs]
+
+    # actors
+    if isinstance(acts, list):
+        pass
+    elif acts is None:
+        acts = []
+    elif isinstance(acts, float) and pd.isna(acts):
+        acts = []
+    elif isinstance(acts, str):
+        acts = [acts]
+    else:
+        acts = [acts]
+
+    for d in dirs:
+        name = str(d).strip()
+        if name:
+            todos_directores.append(name)
+
+    for a in acts:
+        name = str(a).strip()
+        if name:
+            todos_actores.append(name)
+
+director_counts = Counter(todos_directores)
+actor_counts = Counter(todos_actores)
+
+print('\n--- CONTEO DE PERSONAS ---')
+print(f'Directores únicos: {len(director_counts)}')
+print(f'Actores únicos: {len(actor_counts)}')
+
+print('\nTop 20 directores por número de apariciones:')
+for name, cnt in director_counts.most_common(20):
+    print(f"{cnt:4d}  {name}")
+
+print('\nTop 20 actores por número de apariciones:')
+for name, cnt in actor_counts.most_common(20):
+    print(f"{cnt:4d}  {name}")
