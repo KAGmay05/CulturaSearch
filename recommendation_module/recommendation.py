@@ -270,7 +270,7 @@ class RecommendationEngine:
                 return min(1.0, score)
         return 0.0
     
-    def content_based_score(self, user_profile, documents, query: str = None):
+    def content_based_score(self, user_profile, documents, query: str = None, apply_viewed_penalty: bool = False):
         """Calcula puntuaciones de contenido para múltiples dimensiones, preservando metadata signals."""
         if not documents:
             return []
@@ -279,8 +279,8 @@ class RecommendationEngine:
         content_similarities = self.calculate_content_similarity(user_profile, documents)
         scored_documents = []
         
-        # Preparar URLs vistas para comparación rápida
-        viewed_urls_lower = {url.lower().strip() for url in normalized_profile.get("viewed_urls", [])}
+        # Preparar URLs vistas para comparación rápida (solo se usarán si apply_viewed_penalty)
+        viewed_urls_lower = {url.lower().strip() for url in normalized_profile.get("viewed_urls", [])} if apply_viewed_penalty else set()
         
         for idx, doc in enumerate(documents):
             scored_doc = ScoredDocument(doc)
@@ -319,11 +319,12 @@ class RecommendationEngine:
             else:
                 scored_doc.metadata_score = 0.0
             
-            # Penalización por visualización
-            doc_url = str(self.doc_get(doc, "url", "")).lower().strip()
-            if doc_url in viewed_urls_lower:
-                scored_doc.viewed_penalty = self.viewed_penalty
-                scored_doc.already_viewed = True
+            # Penalización por visualización (aplica solo si apply_viewed_penalty=True)
+            if apply_viewed_penalty:
+                doc_url = str(self.doc_get(doc, "url", "")).lower().strip()
+                if doc_url in viewed_urls_lower:
+                    scored_doc.viewed_penalty = self.viewed_penalty
+                    scored_doc.already_viewed = True
             
             self.calculate_final_score(scored_doc)
             scored_documents.append(scored_doc)
@@ -365,7 +366,7 @@ class RecommendationEngine:
         
         return False
     
-    def personalize_results(self, user, retriever_results, top_k=10, diversity_ratio=0.3, query: str = None):
+    def personalize_results(self, user, retriever_results, top_k=10, diversity_ratio=0.3, query: str = None, apply_viewed_penalty: bool = False):
         """Personaliza resultados agregando diversidad (exploración + explotación).
         
         diversity_ratio: proporción de resultados exploratoria (baja similitud) vs explotación (alta similitud).
@@ -403,7 +404,7 @@ class RecommendationEngine:
         if not retriever_results:
             return []
 
-        scored_docs = self.content_based_score(user, retriever_results, query=query)
+        scored_docs = self.content_based_score(user, retriever_results, query=query, apply_viewed_penalty=apply_viewed_penalty)
         
         # Filtrar por threshold mínimo
         filtered_docs = [
@@ -596,7 +597,8 @@ def recommend_for_user(
             user_profile,
             filtered_results,
             top_k=top_k,
-            diversity_ratio=diversity_ratio
+            diversity_ratio=diversity_ratio,
+            apply_viewed_penalty=True,
         )
 
         # Devolver SearchResult-like objects para compatibilidad con el resto del código y tests
