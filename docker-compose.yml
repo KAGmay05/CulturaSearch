@@ -2,13 +2,14 @@ services:
   app:
     build: .
     image: culturasearch:local
-    command: python main.py rag
+    command: streamlit run app.py --server.port=8501 --server.address=0.0.0.0
+    ports:
+      - "8501:8501"
     environment:
       OLLAMA_ENDPOINT: http://ollama:11434
       OLLAMA_MODEL: neural-chat
     volumes:
-      - ./data:/app/data
-      - ./bd:/app/bd
+      - ./:/app
     depends_on:
       - ollama
     stdin_open: true

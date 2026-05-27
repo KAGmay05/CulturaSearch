@@ -13,5 +13,6 @@ langchain>=0.1.0
 ollama>=0.1.0
 transformers
 torch
+torchvision
 playwright
 streamlit>=1.32.0

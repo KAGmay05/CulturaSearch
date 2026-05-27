@@ -55,9 +55,9 @@ class RAGPipeline:
             f"PREGUNTA: {query}\n\n"
             "INSTRUCCIONES (cumplir exactamente):\n"
             "- Usa SÓLO la información listada en 'INFORMACIÓN DISPONIBLE'. No añadas títulos ni datos externos.\n"
-            "- Si ningún documento coincide con la consulta, responde exactamente: 'No hay suficiente información en los documentos proporcionados.'\n"
+            "- Si NINGÚN documento coincide con la consulta, responde ÚNICAMENTE con: 'No hay suficiente información en los documentos proporcionados.' No mezcles esto con recomendaciones.\n"
             "- Para cada título relevante, escribe UN párrafo numerado (2-3 oraciones) explicando por qué encaja con la pregunta.\n"
-            "- No inventes títulos, ni uses conocimiento externo, ni agregues aclaraciones o texto adicional fuera de los párrafos numerados.\n"
+            "- No inventes títulos, ni uses conocimiento externo, ni agregues aclaraciones o texto adicional fuera de los párrafos numerados o advertencias al final de la respuesta.\n"
             "- Responde sólo en español y mantén el formato estricto solicitado.\n"
         )
 
@@ -85,7 +85,7 @@ class RAGPipeline:
 
         # PASO 1: Limpieza local de la consulta original (sin LLM)
         stopwords = {
-            "recmiendame", "recomienda", "recomendar", "recoemidame", "recoemindame",
+            "recomiendame", "recomienda", "recomendar", "recoemidame", "recoemindame",
             "quiero", "busco", "dame", "deme", "muestrame", "muestra",
             "parecida", "parecidas", "parecido", "parecidos",
             "similar", "similares", "igualmente", "igual", "iguales", "tipo", "tipos",
@@ -159,7 +159,7 @@ class RAGPipeline:
             
             prompt = (
                 "Eres experto en búsqueda. Dada una temática/concepto de película o serie, "
-                "genera 3-5 palabras clave o frases cortas relacionadas que amplíen la búsqueda. "
+                "genera 2-4 palabras clave o frases cortas relacionadas que amplíen la búsqueda. "
                 "Si la consulta no menciona una película concreta, transforma la idea en términos de búsqueda útiles "
                 "y relacionados. Prioriza conceptos, géneros, sinónimos y términos cercanos. "
                 "Mantén SIEMPRE el dominio cine/series y no desvíes conceptos a otros contextos. "

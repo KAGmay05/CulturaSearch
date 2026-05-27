@@ -23,6 +23,8 @@ DEFAULT_DATASET_PATH = "data/dataset.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
 DEFAULT_VECTOR_METADATA_PATH = "bd/metadata.pkl"
+DEFAULT_WEB_VECTOR_INDEX_PATH = "bd/web_movies_vectors.index"
+DEFAULT_WEB_VECTOR_METADATA_PATH = "bd/web_metadata.pkl"
 DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
 TEXT_REPRESENTATION_VERSION = 2
 
@@ -52,6 +54,8 @@ class NeuralRetriever:
         vector_db_path: str = DEFAULT_VECTOR_DB_PATH,
         vector_index_path: str = DEFAULT_VECTOR_INDEX_PATH,
         vector_metadata_path: str = DEFAULT_VECTOR_METADATA_PATH,
+        web_vector_index_path: str = DEFAULT_WEB_VECTOR_INDEX_PATH,
+        web_vector_metadata_path: str = DEFAULT_WEB_VECTOR_METADATA_PATH,
         web_cache_path: str = DEFAULT_WEB_CACHE_PATH,
     ) -> None:
         """Initializes model, storage paths and in-memory search structures."""
@@ -62,15 +66,25 @@ class NeuralRetriever:
         self.vector_db_path = vector_db_path
         self.vector_index_path = vector_index_path
         self.vector_metadata_path = vector_metadata_path
+        self.web_vector_index_path = web_vector_index_path
+        self.web_vector_metadata_path = web_vector_metadata_path
         self.web_cache_path = web_cache_path
         self.model = SentenceTransformer(self.model_name)
         self.reranker: CrossEncoder | None = None
         self.web_expander: WebExpander | None = None
         self.faiss_index: faiss.Index | None = None
+        self.local_faiss_index: faiss.Index | None = None
+        self.web_faiss_index: faiss.Index | None = None
 
         self.documents: List[Dict] = []
         self.urls: List[str] = []
         self.url_to_doc_idx: Dict[str, int] = {}
+        self.local_documents: List[Dict] = []
+        self.web_documents: List[Dict] = []
+        self.local_urls: List[str] = []
+        self.web_urls: List[str] = []
+        self.local_url_to_doc_idx: Dict[str, int] = {}
+        self.web_url_to_doc_idx: Dict[str, int] = {}
         self.embeddings: np.ndarray | None = None
         self.lexical_index: Dict[str, Dict[int, int]] = {}
         self.doc_count: int = 0
@@ -82,20 +96,38 @@ class NeuralRetriever:
         faiss.normalize_L2(q)
         return q
 
-    def _rebuild_embeddings_from_index(self) -> None:
-        """Reconstructs all vectors from FAISS into a dense numpy matrix."""
-        if self.faiss_index is None:
-            raise ValueError("El indice FAISS no esta cargado.")
-        emb_rows: List[np.ndarray] = []
-        for i in range(self.faiss_index.ntotal):
-            emb_rows.append(self.faiss_index.reconstruct(i))
-        self.embeddings = np.array(emb_rows, dtype=np.float32)
+    def _rebuild_embeddings_from_index(self, index: faiss.Index | None) -> np.ndarray:
+        """Reconstructs all vectors from one FAISS index into a dense matrix."""
+        if index is None:
+            return np.empty((0, 0), dtype=np.float32)
 
-    def _load_metadata(self) -> Dict:
+        emb_rows: List[np.ndarray] = []
+        for i in range(index.ntotal):
+            emb_rows.append(index.reconstruct(i))
+
+        if not emb_rows:
+            return np.empty((0, 0), dtype=np.float32)
+        return np.array(emb_rows, dtype=np.float32)
+
+    def _rebuild_embeddings_from_bundles(self) -> None:
+        """Reconstructs embeddings from local and web indexes into one matrix."""
+        emb_parts: List[np.ndarray] = []
+        for bundle_index in (self.local_faiss_index, self.web_faiss_index):
+            if bundle_index is None or bundle_index.ntotal == 0:
+                continue
+            emb_parts.append(self._rebuild_embeddings_from_index(bundle_index))
+
+        if emb_parts:
+            self.embeddings = np.concatenate(emb_parts, axis=0)
+        else:
+            self.embeddings = np.empty((0, 0), dtype=np.float32)
+
+    def _load_metadata(self, metadata_path: str | None = None) -> Dict:
         """Loads metadata payload and adapts legacy formats for compatibility."""
-        if not os.path.exists(self.vector_metadata_path):
-            raise FileNotFoundError(f"No se encontro metadata en: {self.vector_metadata_path}")
-        with open(self.vector_metadata_path, "rb") as f:
+        resolved_path = metadata_path or self.vector_metadata_path
+        if not os.path.exists(resolved_path):
+            raise FileNotFoundError(f"No se encontro metadata en: {resolved_path}")
+        with open(resolved_path, "rb") as f:
             payload = pickle.load(f)
 
         # Compatibilidad con metadata vieja (lista de URLs)
@@ -108,6 +140,93 @@ class NeuralRetriever:
         if not isinstance(payload, dict):
             raise ValueError("metadata.pkl tiene un formato invalido.")
         return payload
+
+    @staticmethod
+    def _urls_from_documents(documents: List[Dict]) -> List[str]:
+        return [str(doc.get("url", "")) for doc in documents if str(doc.get("url", ""))]
+
+    def _load_local_documents(self) -> List[Dict]:
+        if not os.path.exists(self.dataset_path):
+            raise FileNotFoundError(
+                f"No se encontro el dataset en: {self.dataset_path}. "
+                "Primero ejecuta tu scraper para generar data/dataset.json."
+            )
+
+        with open(self.dataset_path, "r", encoding="utf-8") as f:
+            dataset = json.load(f)
+
+        if not isinstance(dataset, list) or not dataset:
+            raise ValueError("El archivo data/dataset.json esta vacio o no tiene el formato esperado.")
+
+        return [doc for doc in dataset if isinstance(doc, dict)]
+
+    def _load_web_documents(self) -> List[Dict]:
+        if not os.path.exists(self.web_cache_path):
+            return []
+
+        with open(self.web_cache_path, "r", encoding="utf-8") as f:
+            cached_docs = json.load(f)
+
+        if not isinstance(cached_docs, list):
+            return []
+
+        return [doc for doc in cached_docs if isinstance(doc, dict)]
+
+    def _bundle_is_current(self, index_path: str, metadata_path: str, expected_documents: List[Dict]) -> bool:
+        if not (os.path.exists(index_path) and os.path.exists(metadata_path)):
+            return False
+
+        try:
+            metadata = self._load_metadata(metadata_path)
+        except Exception:
+            return False
+
+        expected_urls = self._urls_from_documents(expected_documents)
+        metadata_urls = [str(url) for url in metadata.get("urls", [])]
+        text_version = int(metadata.get("text_version", 0) or 0)
+        vector_count = int(metadata.get("vector_count", -1) or -1)
+
+        return (
+            metadata_urls == expected_urls
+            and vector_count == len(expected_documents)
+            and text_version == TEXT_REPRESENTATION_VERSION
+        )
+
+    def _load_bundle_from_disk(
+        self,
+        index_path: str,
+        metadata_path: str,
+        fallback_documents: List[Dict],
+    ) -> tuple[faiss.Index, List[str], List[Dict]]:
+        if not (os.path.exists(index_path) and os.path.exists(metadata_path)):
+            raise FileNotFoundError(f"No se encontro el indice bundle: {index_path} / {metadata_path}")
+
+        bundle_index = faiss.read_index(index_path)
+        metadata = self._load_metadata(metadata_path)
+        urls = [str(url) for url in metadata.get("urls", [])]
+
+        stored_docs = metadata.get("documents")
+        if isinstance(stored_docs, list) and stored_docs:
+            documents = [doc for doc in stored_docs if isinstance(doc, dict)]
+            if len(documents) == len(urls):
+                return bundle_index, urls, documents
+
+        doc_by_url = {str(doc.get("url", "")): doc for doc in fallback_documents if doc.get("url")}
+        documents = []
+        for url in urls:
+            documents.append(
+                doc_by_url.get(
+                    url,
+                    {
+                        "url": url,
+                        "title": "Sin titulo",
+                        "plot": "",
+                        "type": "desconocido",
+                    },
+                )
+            )
+
+        return bundle_index, urls, documents
 
     def _load_reranker(self, model_name: str | None = None) -> CrossEncoder:
         """Lazily loads and caches the cross-encoder reranker model."""
@@ -166,36 +285,8 @@ class NeuralRetriever:
         ).strip()
 
     def _load_dataset(self) -> List[Dict]:
-        """Loads local dataset and merges web cache documents without URL duplicates."""
-        if not os.path.exists(self.dataset_path):
-            raise FileNotFoundError(
-                f"No se encontro el dataset en: {self.dataset_path}. "
-                "Primero ejecuta tu scraper para generar data/dataset.json."
-            )
-
-        with open(self.dataset_path, "r", encoding="utf-8") as f:
-            dataset = json.load(f)
-
-        if not isinstance(dataset, list) or not dataset:
-            raise ValueError("El archivo data/dataset.json esta vacio o no tiene el formato esperado.")
-
-        merged_documents = list(dataset)
-        seen_urls = {str(doc.get("url", "")) for doc in merged_documents if doc.get("url")}
-
-        if os.path.exists(self.web_cache_path):
-            with open(self.web_cache_path, "r", encoding="utf-8") as f:
-                cached_docs = json.load(f)
-
-            if isinstance(cached_docs, list):
-                for doc in cached_docs:
-                    if not isinstance(doc, dict):
-                        continue
-                    url = str(doc.get("url", ""))
-                    if url and url not in seen_urls:
-                        merged_documents.append(doc)
-                        seen_urls.add(url)
-
-        return merged_documents
+        """Loads only the local base corpus without mixing web cache documents."""
+        return self._load_local_documents()
 
     def _build_lexical_index(self) -> None:
         """Builds an in-memory term -> {doc_idx: tf} lexical inverted index."""
@@ -259,36 +350,28 @@ class NeuralRetriever:
 
     def build_vector_db(self, force_rebuild: bool = False) -> None:
         """Builds or reuses vector index artifacts and refreshes lexical index state."""
-        expected_documents = self._load_dataset()
-        expected_count = len(expected_documents)
+        local_documents = self._load_local_documents()
+        web_documents = self._load_web_documents()
+        local_urls = self._urls_from_documents(local_documents)
+        local_seen = set(local_urls)
+        filtered_web_documents = [
+            doc for doc in web_documents
+            if str(doc.get("url", "")) and str(doc.get("url", "")) not in local_seen
+        ]
 
-        has_index_backend = os.path.exists(self.vector_index_path) and os.path.exists(self.vector_metadata_path)
+        local_current = self._bundle_is_current(self.vector_index_path, self.vector_metadata_path, local_documents)
+        web_current = not filtered_web_documents or self._bundle_is_current(
+            self.web_vector_index_path,
+            self.web_vector_metadata_path,
+            filtered_web_documents,
+        )
 
-        if has_index_backend and not force_rebuild:
+        if not force_rebuild and local_current and web_current:
             self.load_vector_db()
-            metadata = {}
-            try:
-                metadata = self._load_metadata()
-            except Exception:
-                metadata = {}
-            embeddings_count = int(self.embeddings.shape[0]) if self.embeddings is not None and self.embeddings.ndim > 0 else 0
-            documents_count = len(self.documents)
-            urls_count = len(self.urls)
-            text_version = int(metadata.get("text_version", 0) or 0)
+            return
 
-            # Reuse existing vector DB only when all index components are aligned.
-            if (
-                documents_count == expected_count
-                and embeddings_count == expected_count
-                and urls_count == expected_count
-                and text_version == TEXT_REPRESENTATION_VERSION
-            ):
-                self._build_lexical_index()
-                return
-
-        self.documents = expected_documents
         bd_vectorizer.build_embeddings(
-            documents=self.documents,
+            documents=local_documents,
             model_name=self.model_name,
             index_path=self.vector_index_path,
             metadata_path=self.vector_metadata_path,
@@ -296,6 +379,18 @@ class NeuralRetriever:
             text_builder=self._build_text,
             model=self.model,
         )
+
+        if filtered_web_documents:
+            bd_vectorizer.build_embeddings(
+                documents=filtered_web_documents,
+                model_name=self.model_name,
+                index_path=self.web_vector_index_path,
+                metadata_path=self.web_vector_metadata_path,
+                include_documents=True,
+                text_builder=self._build_text,
+                model=self.model,
+            )
+
         self.load_vector_db()
 
     def load_vector_db(self) -> None:
@@ -306,39 +401,44 @@ class NeuralRetriever:
                 "Ejecuta build_vector_db() primero."
             )
 
-        self.faiss_index = faiss.read_index(self.vector_index_path)
-        metadata = self._load_metadata()
+        local_fallback_docs = self._load_local_documents()
+        self.local_faiss_index, self.local_urls, self.local_documents = self._load_bundle_from_disk(
+            self.vector_index_path,
+            self.vector_metadata_path,
+            local_fallback_docs,
+        )
 
-        self.urls = [str(url) for url in metadata.get("urls", [])]
-        self.url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.urls)}
-
-        stored_docs = metadata.get("documents")
-        if isinstance(stored_docs, list) and stored_docs:
-            self.documents = stored_docs
+        web_fallback_docs = self._load_web_documents()
+        if os.path.exists(self.web_vector_index_path) and os.path.exists(self.web_vector_metadata_path):
+            self.web_faiss_index, self.web_urls, self.web_documents = self._load_bundle_from_disk(
+                self.web_vector_index_path,
+                self.web_vector_metadata_path,
+                web_fallback_docs,
+            )
         else:
-            dataset_docs = self._load_dataset()
-            doc_by_url = {
-                str(doc.get("url", "")): doc
-                for doc in dataset_docs
-                if isinstance(doc, dict)
-            }
-            self.documents = [
-                doc_by_url.get(
-                    url,
-                    {
-                        "url": url,
-                        "title": "Sin titulo",
-                        "plot": "",
-                        "type": "desconocido",
-                    },
-                )
-                for url in self.urls
-            ]
+            self.web_faiss_index = None
+            self.web_urls = []
+            self.web_documents = []
 
-        if self.faiss_index.ntotal == 0:
+        combined_documents = list(self.local_documents)
+        seen_urls = {str(doc.get("url", "")) for doc in combined_documents if doc.get("url")}
+        for doc in self.web_documents:
+            url = str(doc.get("url", ""))
+            if url and url not in seen_urls:
+                combined_documents.append(doc)
+                seen_urls.add(url)
+
+        self.documents = combined_documents
+        self.urls = [str(doc.get("url", "")) for doc in self.documents if doc.get("url")]
+        self.url_to_doc_idx = {str(doc.get("url", "")): idx for idx, doc in enumerate(self.documents) if doc.get("url")}
+        self.local_url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.local_urls)}
+        self.web_url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.web_urls)}
+        self.faiss_index = self.local_faiss_index
+
+        if (self.local_faiss_index is None or self.local_faiss_index.ntotal == 0) and (self.web_faiss_index is None or self.web_faiss_index.ntotal == 0):
             raise ValueError("El indice FAISS esta vacio.")
 
-        self._rebuild_embeddings_from_index()
+        self._rebuild_embeddings_from_bundles()
 
         if self.embeddings.size == 0:
             raise ValueError("La matriz de embeddings esta vacia.")
@@ -354,15 +454,28 @@ class NeuralRetriever:
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
 
-        if self.embeddings is None or self.faiss_index is None:
+        if self.embeddings is None or (self.local_faiss_index is None and self.web_faiss_index is None):
             self.ensure_ready()
+
+        return self._search_across_bundles(query=query, top_k=top_k)
+
+    def _search_bundle(
+        self,
+        query: str,
+        top_k: int,
+        index: faiss.Index | None,
+        urls: List[str],
+        doc_offset: int,
+    ) -> List[SearchResult]:
+        if index is None or not urls:
+            return []
 
         raw_results = bd_vectorizer.search_by_similarity(
             query=query,
             top_k=top_k,
-            index=self.faiss_index,
+            index=index,
             model=self.model,
-            urls=self.urls,
+            urls=urls,
             return_indices=True,
         )
 
@@ -370,14 +483,18 @@ class NeuralRetriever:
         for item in raw_results:
             idx = int(item.get("index", -1))
             score = float(item.get("score", 0.0))
-            rank = int(item.get("rank", len(results) + 1))
-            if idx < 0 or idx >= len(self.documents):
+            if idx < 0 or idx >= len(urls):
                 continue
-            doc = self.documents[idx]
+
+            global_idx = doc_offset + idx
+            if global_idx < 0 or global_idx >= len(self.documents):
+                continue
+
+            doc = self.documents[global_idx]
             normalized_score = float(np.clip((score + 1.0) / 2.0, 0.0, 1.0))
             results.append(
                 SearchResult(
-                    rank=rank,
+                    rank=int(item.get("rank", len(results) + 1)),
                     score=normalized_score,
                     url=str(doc.get("url", "")),
                     title=str(doc.get("title", "Sin titulo")),
@@ -391,6 +508,21 @@ class NeuralRetriever:
             )
 
         return results
+
+    def _search_across_bundles(self, query: str, top_k: int) -> List[SearchResult]:
+        local_results = self._search_bundle(query, top_k, self.local_faiss_index, self.local_urls, 0)
+        web_results = self._search_bundle(query, top_k, self.web_faiss_index, self.web_urls, len(self.local_documents))
+
+        merged_by_url: Dict[str, SearchResult] = {}
+        for item in local_results + web_results:
+            previous = merged_by_url.get(item.url)
+            if previous is None or item.score > previous.score:
+                merged_by_url[item.url] = item
+
+        merged = sorted(merged_by_url.values(), key=lambda result: result.score, reverse=True)
+        for rank, item in enumerate(merged[:top_k], start=1):
+            item.rank = rank
+        return merged[:top_k]
 
     def _extract_media_type_filter(self, query: str) -> str | None:
         """Extract media type filter from query (pelicula/serie)."""
@@ -621,11 +753,11 @@ class NeuralRetriever:
         top_score = float(local_results[0].score) if local_results else 0.0
         lexical_coverage = self._query_lexical_coverage(query)
 
-        # If query terms are well covered in the local index, trust local results even
-        # when rerank scores are low (reranker may underestimate title-only queries).
+        # If the highest score is extremely low, trigger web expansion even with high lexical coverage.
+        # Otherwise, if the score is mediocre, trigger it only if lexical coverage is low.
         high_lexical_coverage = lexical_coverage >= min_lexical_coverage
         needs_web_expansion = (
-            (top_score < hard_min_local_score and not high_lexical_coverage)
+            (top_score < hard_min_local_score)
             or (top_score < min_local_score and not high_lexical_coverage)
         )
 
