@@ -764,8 +764,12 @@ class NeuralRetriever:
         if not needs_web_expansion:
             return local_results
 
-        web_expander = self._load_web_expander()
-        web_documents = web_expander.expand(query=query, max_results=web_max_results)
+        try:
+            web_expander = self._load_web_expander()
+            web_documents = web_expander.expand(query=query, max_results=web_max_results)
+        except Exception as exc:
+            print(f"[WARN] Se omite la expansión web por error: {type(exc).__name__}: {exc}")
+            return local_results
 
         if not web_documents:
             return local_results

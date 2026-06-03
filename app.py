@@ -4,6 +4,7 @@ import html
 import webbrowser
 
 import streamlit as st
+import re
 
 from neural_based_model.neural_retriever import NeuralRetriever, SearchResult
 from recommendation_module.profile_store import load_user, save_user
@@ -308,6 +309,7 @@ def render_result_card(item: SearchResult, rank: int, summary_override: str | No
     summary_source = summary_override if summary_override else (plot_value or getattr(item, 'description', '') or '')
     snippet_limit = 380
     cleaned_summary = (summary_source or "").strip()
+    cleaned_summary = re.sub(r'^\s*[\[(]\s*([^:\]\)]+?)\s*[\])]\s*:\s*', '', cleaned_summary)
     is_long = len(cleaned_summary) > snippet_limit
     # Unique key for expand state per card
     expand_key = f"expand_{rank}_{abs(hash(item.url or item.title or rank))}"

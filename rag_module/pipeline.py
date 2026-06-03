@@ -36,10 +36,10 @@ class RAGPipeline:
                 else:
                     plot_clean = plot.strip()[:400]
                 context_parts.append(
-                    f"[{i}] {title}\n"
+                    f"{i}. {title}\n"
                     f"Descripción: {plot_clean}")
             else:
-                context_parts.append(f"[{i}] {title}")
+                context_parts.append(f"{i}. {title}")
 
         if not context_parts:
             return "(No hay información disponible)"
@@ -375,7 +375,7 @@ class RAGPipeline:
           title = getattr(doc, "title", "Sin título")
           plot = getattr(doc, "plot", "") or getattr(doc, "description", "")
 
-          print(f"\n[{i}] {title}")
+          print(f"\n{i}. {title}")
 
           if plot:
             print(plot[:400])
