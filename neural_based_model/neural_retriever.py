@@ -1,8 +1,9 @@
 import json
+import math
 import os
 import pickle
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Sequence
 
 import faiss
 import numpy as np
@@ -12,16 +13,20 @@ from sentence_transformers import CrossEncoder, SentenceTransformer
 from bd import vectorizer as bd_vectorizer
 from index import indexer
 from web_search.web_expander import WebExpander
+from positioning_module.ranking import compute_lexical_scores, compute_hybrid_fusion, compute_positioning_score, compute_rerank_fusion, compute_metadata_alignment_scores, compute_actor_alignment_scores, compute_season_alignment_scores, compute_episode_alignment_scores, compute_year_alignment_scores, compute_country_alignment_scores, rank_by_positioning, sigmoid
 
 
 DEFAULT_MODEL_NAME = "paraphrase-multilingual-MiniLM-L12-v2"
 # Modelo de re-ranking pequeño (~500MB, no 14.5GB)
-DEFAULT_RERANKER_MODEL_NAME = "ms-marco-MiniLM-L-6-v2"
+DEFAULT_RERANKER_MODEL_NAME = "cross-encoder/ms-marco-MiniLM-L-6-v2"
 DEFAULT_DATASET_PATH = "data/dataset.json"
 DEFAULT_VECTOR_DB_PATH = "bd/movies_vectors.pkl"
 DEFAULT_VECTOR_INDEX_PATH = "bd/movies_vectors.index"
 DEFAULT_VECTOR_METADATA_PATH = "bd/metadata.pkl"
+DEFAULT_WEB_VECTOR_INDEX_PATH = "bd/web_movies_vectors.index"
+DEFAULT_WEB_VECTOR_METADATA_PATH = "bd/web_metadata.pkl"
 DEFAULT_WEB_CACHE_PATH = "data/web_cache.json"
+TEXT_REPRESENTATION_VERSION = 2
 
 
 @dataclass
@@ -35,6 +40,7 @@ class SearchResult:
     neural_score: float = 0.0
     lexical_score: float = 0.0
     rerank_score: float = 0.0
+    final_score: float = 0.0
 
 
 class NeuralRetriever:
@@ -48,6 +54,8 @@ class NeuralRetriever:
         vector_db_path: str = DEFAULT_VECTOR_DB_PATH,
         vector_index_path: str = DEFAULT_VECTOR_INDEX_PATH,
         vector_metadata_path: str = DEFAULT_VECTOR_METADATA_PATH,
+        web_vector_index_path: str = DEFAULT_WEB_VECTOR_INDEX_PATH,
+        web_vector_metadata_path: str = DEFAULT_WEB_VECTOR_METADATA_PATH,
         web_cache_path: str = DEFAULT_WEB_CACHE_PATH,
     ) -> None:
         """Initializes model, storage paths and in-memory search structures."""
@@ -58,15 +66,25 @@ class NeuralRetriever:
         self.vector_db_path = vector_db_path
         self.vector_index_path = vector_index_path
         self.vector_metadata_path = vector_metadata_path
+        self.web_vector_index_path = web_vector_index_path
+        self.web_vector_metadata_path = web_vector_metadata_path
         self.web_cache_path = web_cache_path
         self.model = SentenceTransformer(self.model_name)
         self.reranker: CrossEncoder | None = None
         self.web_expander: WebExpander | None = None
         self.faiss_index: faiss.Index | None = None
+        self.local_faiss_index: faiss.Index | None = None
+        self.web_faiss_index: faiss.Index | None = None
 
         self.documents: List[Dict] = []
         self.urls: List[str] = []
         self.url_to_doc_idx: Dict[str, int] = {}
+        self.local_documents: List[Dict] = []
+        self.web_documents: List[Dict] = []
+        self.local_urls: List[str] = []
+        self.web_urls: List[str] = []
+        self.local_url_to_doc_idx: Dict[str, int] = {}
+        self.web_url_to_doc_idx: Dict[str, int] = {}
         self.embeddings: np.ndarray | None = None
         self.lexical_index: Dict[str, Dict[int, int]] = {}
         self.doc_count: int = 0
@@ -78,20 +96,38 @@ class NeuralRetriever:
         faiss.normalize_L2(q)
         return q
 
-    def _rebuild_embeddings_from_index(self) -> None:
-        """Reconstructs all vectors from FAISS into a dense numpy matrix."""
-        if self.faiss_index is None:
-            raise ValueError("El indice FAISS no esta cargado.")
-        emb_rows: List[np.ndarray] = []
-        for i in range(self.faiss_index.ntotal):
-            emb_rows.append(self.faiss_index.reconstruct(i))
-        self.embeddings = np.array(emb_rows, dtype=np.float32)
+    def _rebuild_embeddings_from_index(self, index: faiss.Index | None) -> np.ndarray:
+        """Reconstructs all vectors from one FAISS index into a dense matrix."""
+        if index is None:
+            return np.empty((0, 0), dtype=np.float32)
 
-    def _load_metadata(self) -> Dict:
+        emb_rows: List[np.ndarray] = []
+        for i in range(index.ntotal):
+            emb_rows.append(index.reconstruct(i))
+
+        if not emb_rows:
+            return np.empty((0, 0), dtype=np.float32)
+        return np.array(emb_rows, dtype=np.float32)
+
+    def _rebuild_embeddings_from_bundles(self) -> None:
+        """Reconstructs embeddings from local and web indexes into one matrix."""
+        emb_parts: List[np.ndarray] = []
+        for bundle_index in (self.local_faiss_index, self.web_faiss_index):
+            if bundle_index is None or bundle_index.ntotal == 0:
+                continue
+            emb_parts.append(self._rebuild_embeddings_from_index(bundle_index))
+
+        if emb_parts:
+            self.embeddings = np.concatenate(emb_parts, axis=0)
+        else:
+            self.embeddings = np.empty((0, 0), dtype=np.float32)
+
+    def _load_metadata(self, metadata_path: str | None = None) -> Dict:
         """Loads metadata payload and adapts legacy formats for compatibility."""
-        if not os.path.exists(self.vector_metadata_path):
-            raise FileNotFoundError(f"No se encontro metadata en: {self.vector_metadata_path}")
-        with open(self.vector_metadata_path, "rb") as f:
+        resolved_path = metadata_path or self.vector_metadata_path
+        if not os.path.exists(resolved_path):
+            raise FileNotFoundError(f"No se encontro metadata en: {resolved_path}")
+        with open(resolved_path, "rb") as f:
             payload = pickle.load(f)
 
         # Compatibilidad con metadata vieja (lista de URLs)
@@ -104,6 +140,93 @@ class NeuralRetriever:
         if not isinstance(payload, dict):
             raise ValueError("metadata.pkl tiene un formato invalido.")
         return payload
+
+    @staticmethod
+    def _urls_from_documents(documents: List[Dict]) -> List[str]:
+        return [str(doc.get("url", "")) for doc in documents if str(doc.get("url", ""))]
+
+    def _load_local_documents(self) -> List[Dict]:
+        if not os.path.exists(self.dataset_path):
+            raise FileNotFoundError(
+                f"No se encontro el dataset en: {self.dataset_path}. "
+                "Primero ejecuta tu scraper para generar data/dataset.json."
+            )
+
+        with open(self.dataset_path, "r", encoding="utf-8") as f:
+            dataset = json.load(f)
+
+        if not isinstance(dataset, list) or not dataset:
+            raise ValueError("El archivo data/dataset.json esta vacio o no tiene el formato esperado.")
+
+        return [doc for doc in dataset if isinstance(doc, dict)]
+
+    def _load_web_documents(self) -> List[Dict]:
+        if not os.path.exists(self.web_cache_path):
+            return []
+
+        with open(self.web_cache_path, "r", encoding="utf-8") as f:
+            cached_docs = json.load(f)
+
+        if not isinstance(cached_docs, list):
+            return []
+
+        return [doc for doc in cached_docs if isinstance(doc, dict)]
+
+    def _bundle_is_current(self, index_path: str, metadata_path: str, expected_documents: List[Dict]) -> bool:
+        if not (os.path.exists(index_path) and os.path.exists(metadata_path)):
+            return False
+
+        try:
+            metadata = self._load_metadata(metadata_path)
+        except Exception:
+            return False
+
+        expected_urls = self._urls_from_documents(expected_documents)
+        metadata_urls = [str(url) for url in metadata.get("urls", [])]
+        text_version = int(metadata.get("text_version", 0) or 0)
+        vector_count = int(metadata.get("vector_count", -1) or -1)
+
+        return (
+            metadata_urls == expected_urls
+            and vector_count == len(expected_documents)
+            and text_version == TEXT_REPRESENTATION_VERSION
+        )
+
+    def _load_bundle_from_disk(
+        self,
+        index_path: str,
+        metadata_path: str,
+        fallback_documents: List[Dict],
+    ) -> tuple[faiss.Index, List[str], List[Dict]]:
+        if not (os.path.exists(index_path) and os.path.exists(metadata_path)):
+            raise FileNotFoundError(f"No se encontro el indice bundle: {index_path} / {metadata_path}")
+
+        bundle_index = faiss.read_index(index_path)
+        metadata = self._load_metadata(metadata_path)
+        urls = [str(url) for url in metadata.get("urls", [])]
+
+        stored_docs = metadata.get("documents")
+        if isinstance(stored_docs, list) and stored_docs:
+            documents = [doc for doc in stored_docs if isinstance(doc, dict)]
+            if len(documents) == len(urls):
+                return bundle_index, urls, documents
+
+        doc_by_url = {str(doc.get("url", "")): doc for doc in fallback_documents if doc.get("url")}
+        documents = []
+        for url in urls:
+            documents.append(
+                doc_by_url.get(
+                    url,
+                    {
+                        "url": url,
+                        "title": "Sin titulo",
+                        "plot": "",
+                        "type": "desconocido",
+                    },
+                )
+            )
+
+        return bundle_index, urls, documents
 
     def _load_reranker(self, model_name: str | None = None) -> CrossEncoder:
         """Lazily loads and caches the cross-encoder reranker model."""
@@ -118,7 +241,7 @@ class NeuralRetriever:
     @staticmethod
     def _sigmoid(values: np.ndarray) -> np.ndarray:
         """Applies a sigmoid transform to map raw scores into [0, 1]."""
-        return 1.0 / (1.0 + np.exp(-values))
+        return sigmoid(values)
 
     def _build_text(self, movie: Dict) -> str:
         """Builds the canonical searchable text representation for one document."""
@@ -128,6 +251,9 @@ class NeuralRetriever:
         rating = str(movie.get("rating", ""))
         media_type = str(movie.get("type", ""))
         country = str(movie.get("country", ""))
+        year_range = str(movie.get("year_range", ""))
+        seasons = str(movie.get("seasons", ""))
+        episodes = str(movie.get("episodes", ""))
 
         genres = movie.get("genres", [])
         if isinstance(genres, list):
@@ -147,42 +273,20 @@ class NeuralRetriever:
         else:
             directors_text = str(directors)
 
+        creators = movie.get("creator", [])
+        if isinstance(creators, list):
+            creators_text = " ".join(str(c) for c in creators)
+        else:
+            creators_text = str(creators)
+
         return (
-            f"{title} {year} {rating} {media_type} {country} "
-            f"{genres_text} {directors_text} {plot} {actors_text}"
+            f"{title} {year} {year_range} {rating} {media_type} {country} "
+            f"{genres_text} {directors_text} {creators_text} {seasons} temporadas {episodes} episodios {plot} {actors_text}"
         ).strip()
 
     def _load_dataset(self) -> List[Dict]:
-        """Loads local dataset and merges web cache documents without URL duplicates."""
-        if not os.path.exists(self.dataset_path):
-            raise FileNotFoundError(
-                f"No se encontro el dataset en: {self.dataset_path}. "
-                "Primero ejecuta tu scraper para generar data/dataset.json."
-            )
-
-        with open(self.dataset_path, "r", encoding="utf-8") as f:
-            dataset = json.load(f)
-
-        if not isinstance(dataset, list) or not dataset:
-            raise ValueError("El archivo data/dataset.json esta vacio o no tiene el formato esperado.")
-
-        merged_documents = list(dataset)
-        seen_urls = {str(doc.get("url", "")) for doc in merged_documents if doc.get("url")}
-
-        if os.path.exists(self.web_cache_path):
-            with open(self.web_cache_path, "r", encoding="utf-8") as f:
-                cached_docs = json.load(f)
-
-            if isinstance(cached_docs, list):
-                for doc in cached_docs:
-                    if not isinstance(doc, dict):
-                        continue
-                    url = str(doc.get("url", ""))
-                    if url and url not in seen_urls:
-                        merged_documents.append(doc)
-                        seen_urls.add(url)
-
-        return merged_documents
+        """Loads only the local base corpus without mixing web cache documents."""
+        return self._load_local_documents()
 
     def _build_lexical_index(self) -> None:
         """Builds an in-memory term -> {doc_idx: tf} lexical inverted index."""
@@ -196,49 +300,35 @@ class NeuralRetriever:
                 posting[doc_idx] = tf
         self.doc_count = len(self.documents)
 
+    def _resolve_result_document(self, result: SearchResult) -> Dict:
+        """Resolves full document metadata for a ranked result."""
+        doc_idx = self.url_to_doc_idx.get(result.url)
+        if doc_idx is not None and 0 <= doc_idx < len(self.documents):
+            return self.documents[doc_idx]
+        return {
+            "url": result.url,
+            "title": result.title,
+            "plot": result.plot,
+            "type": result.media_type,
+        }
+
     def _compute_lexical_scores(self, query: str) -> np.ndarray:
-        """Computes TF-IDF-like lexical scores with partial-token coverage penalties."""
+        """Delegate lexical scoring to positioning module using cleaned doc texts."""
         if not self.documents:
             return np.array([])
 
-        scores = np.zeros(len(self.documents), dtype=float)
         query_tokens = indexer.clean_text(query)
         if not query_tokens:
-            return scores
+            return np.zeros(len(self.documents), dtype=float)
 
-        query_tf = Counter(query_tokens)
-        print(f"\n[LEXICAL DEBUG] Query: '{query}'")
-        print(f"[LEXICAL DEBUG] Query tokens after cleaning: {query_tokens}")
-        print(f"[LEXICAL DEBUG] Query TF: {dict(query_tf)}")
-        
-        # Para cada documento, trackear qué tokens se encontraron
-        found_tokens_per_doc = {i: set() for i in range(len(self.documents))}
-        
-        for token, qtf in query_tf.items():
-            posting = self.lexical_index.get(token)
-            if not posting:
-                print(f"[LEXICAL DEBUG]   Token '{token}': NOT in index")
-                continue
-            df = len(posting)
-            # Downweight very common terms (e.g., "serie", "comedia") to reduce lexical noise.
-            idf = float(np.log((self.doc_count + 1) / (df + 1)) + 1.0)
-            #print(f"[LEXICAL DEBUG]   Token '{token}': found in {df} docs, IDF={idf:.2f}")
-            for doc_idx, dtf in posting.items():
-                scores[doc_idx] += qtf * dtf * idf
-                found_tokens_per_doc[doc_idx].add(token)
-        
-        # Penalizar documentos que no tienen todos los tokens de la query
-        required_tokens = set(query_tf.keys())
-        #print(f"[LEXICAL DEBUG] Required tokens: {required_tokens}")
-        for doc_idx in range(len(self.documents)):
-            found = found_tokens_per_doc[doc_idx]
-            missing = required_tokens - found
-            if missing:
-                penalty_factor = (len(required_tokens) - len(missing)) / len(required_tokens)
-                scores[doc_idx] *= penalty_factor
-                #print(f"[LEXICAL DEBUG]   Doc #{doc_idx} ({self.documents[doc_idx].get('title', 'N/A')}): missing {missing}, penalty factor={penalty_factor:.2f}")
+        docs_for_scoring = []
+        for doc in self.documents:
+            text = self._build_text(doc)
+            clean = " ".join(indexer.clean_text(text))
+            docs_for_scoring.append({"clean_text": clean, "metadata": doc})
 
-        return scores
+        scores = compute_lexical_scores(query_tokens, docs_for_scoring)
+        return np.array(scores, dtype=float)
 
     def _query_lexical_coverage(self, query: str) -> float:
         """Returns fraction of unique query tokens present in lexical index."""
@@ -260,29 +350,28 @@ class NeuralRetriever:
 
     def build_vector_db(self, force_rebuild: bool = False) -> None:
         """Builds or reuses vector index artifacts and refreshes lexical index state."""
-        expected_documents = self._load_dataset()
-        expected_count = len(expected_documents)
+        local_documents = self._load_local_documents()
+        web_documents = self._load_web_documents()
+        local_urls = self._urls_from_documents(local_documents)
+        local_seen = set(local_urls)
+        filtered_web_documents = [
+            doc for doc in web_documents
+            if str(doc.get("url", "")) and str(doc.get("url", "")) not in local_seen
+        ]
 
-        has_index_backend = os.path.exists(self.vector_index_path) and os.path.exists(self.vector_metadata_path)
+        local_current = self._bundle_is_current(self.vector_index_path, self.vector_metadata_path, local_documents)
+        web_current = not filtered_web_documents or self._bundle_is_current(
+            self.web_vector_index_path,
+            self.web_vector_metadata_path,
+            filtered_web_documents,
+        )
 
-        if has_index_backend and not force_rebuild:
+        if not force_rebuild and local_current and web_current:
             self.load_vector_db()
-            embeddings_count = int(self.embeddings.shape[0]) if self.embeddings is not None and self.embeddings.ndim > 0 else 0
-            documents_count = len(self.documents)
-            urls_count = len(self.urls)
+            return
 
-            # Reuse existing vector DB only when all index components are aligned.
-            if (
-                documents_count == expected_count
-                and embeddings_count == expected_count
-                and urls_count == expected_count
-            ):
-                self._build_lexical_index()
-                return
-
-        self.documents = expected_documents
         bd_vectorizer.build_embeddings(
-            documents=self.documents,
+            documents=local_documents,
             model_name=self.model_name,
             index_path=self.vector_index_path,
             metadata_path=self.vector_metadata_path,
@@ -290,6 +379,18 @@ class NeuralRetriever:
             text_builder=self._build_text,
             model=self.model,
         )
+
+        if filtered_web_documents:
+            bd_vectorizer.build_embeddings(
+                documents=filtered_web_documents,
+                model_name=self.model_name,
+                index_path=self.web_vector_index_path,
+                metadata_path=self.web_vector_metadata_path,
+                include_documents=True,
+                text_builder=self._build_text,
+                model=self.model,
+            )
+
         self.load_vector_db()
 
     def load_vector_db(self) -> None:
@@ -300,39 +401,44 @@ class NeuralRetriever:
                 "Ejecuta build_vector_db() primero."
             )
 
-        self.faiss_index = faiss.read_index(self.vector_index_path)
-        metadata = self._load_metadata()
+        local_fallback_docs = self._load_local_documents()
+        self.local_faiss_index, self.local_urls, self.local_documents = self._load_bundle_from_disk(
+            self.vector_index_path,
+            self.vector_metadata_path,
+            local_fallback_docs,
+        )
 
-        self.urls = [str(url) for url in metadata.get("urls", [])]
-        self.url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.urls)}
-
-        stored_docs = metadata.get("documents")
-        if isinstance(stored_docs, list) and stored_docs:
-            self.documents = stored_docs
+        web_fallback_docs = self._load_web_documents()
+        if os.path.exists(self.web_vector_index_path) and os.path.exists(self.web_vector_metadata_path):
+            self.web_faiss_index, self.web_urls, self.web_documents = self._load_bundle_from_disk(
+                self.web_vector_index_path,
+                self.web_vector_metadata_path,
+                web_fallback_docs,
+            )
         else:
-            dataset_docs = self._load_dataset()
-            doc_by_url = {
-                str(doc.get("url", "")): doc
-                for doc in dataset_docs
-                if isinstance(doc, dict)
-            }
-            self.documents = [
-                doc_by_url.get(
-                    url,
-                    {
-                        "url": url,
-                        "title": "Sin titulo",
-                        "plot": "",
-                        "type": "desconocido",
-                    },
-                )
-                for url in self.urls
-            ]
+            self.web_faiss_index = None
+            self.web_urls = []
+            self.web_documents = []
 
-        if self.faiss_index.ntotal == 0:
+        combined_documents = list(self.local_documents)
+        seen_urls = {str(doc.get("url", "")) for doc in combined_documents if doc.get("url")}
+        for doc in self.web_documents:
+            url = str(doc.get("url", ""))
+            if url and url not in seen_urls:
+                combined_documents.append(doc)
+                seen_urls.add(url)
+
+        self.documents = combined_documents
+        self.urls = [str(doc.get("url", "")) for doc in self.documents if doc.get("url")]
+        self.url_to_doc_idx = {str(doc.get("url", "")): idx for idx, doc in enumerate(self.documents) if doc.get("url")}
+        self.local_url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.local_urls)}
+        self.web_url_to_doc_idx = {str(url): idx for idx, url in enumerate(self.web_urls)}
+        self.faiss_index = self.local_faiss_index
+
+        if (self.local_faiss_index is None or self.local_faiss_index.ntotal == 0) and (self.web_faiss_index is None or self.web_faiss_index.ntotal == 0):
             raise ValueError("El indice FAISS esta vacio.")
 
-        self._rebuild_embeddings_from_index()
+        self._rebuild_embeddings_from_bundles()
 
         if self.embeddings.size == 0:
             raise ValueError("La matriz de embeddings esta vacia.")
@@ -348,15 +454,28 @@ class NeuralRetriever:
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
 
-        if self.embeddings is None or self.faiss_index is None:
+        if self.embeddings is None or (self.local_faiss_index is None and self.web_faiss_index is None):
             self.ensure_ready()
+
+        return self._search_across_bundles(query=query, top_k=top_k)
+
+    def _search_bundle(
+        self,
+        query: str,
+        top_k: int,
+        index: faiss.Index | None,
+        urls: List[str],
+        doc_offset: int,
+    ) -> List[SearchResult]:
+        if index is None or not urls:
+            return []
 
         raw_results = bd_vectorizer.search_by_similarity(
             query=query,
             top_k=top_k,
-            index=self.faiss_index,
+            index=index,
             model=self.model,
-            urls=self.urls,
+            urls=urls,
             return_indices=True,
         )
 
@@ -364,27 +483,57 @@ class NeuralRetriever:
         for item in raw_results:
             idx = int(item.get("index", -1))
             score = float(item.get("score", 0.0))
-            rank = int(item.get("rank", len(results) + 1))
-            if idx < 0 or idx >= len(self.documents):
+            if idx < 0 or idx >= len(urls):
                 continue
-            doc = self.documents[idx]
+
+            global_idx = doc_offset + idx
+            if global_idx < 0 or global_idx >= len(self.documents):
+                continue
+
+            doc = self.documents[global_idx]
+            normalized_score = float(np.clip((score + 1.0) / 2.0, 0.0, 1.0))
             results.append(
                 SearchResult(
-                    rank=rank,
-                    score=float(score),
+                    rank=int(item.get("rank", len(results) + 1)),
+                    score=normalized_score,
                     url=str(doc.get("url", "")),
                     title=str(doc.get("title", "Sin titulo")),
                     media_type=str(doc.get("type", "desconocido")),
                     plot=str(doc.get("plot", "")),
-                    neural_score=float(score),
+                    neural_score=normalized_score,
                     lexical_score=0.0,
                     rerank_score=0.0,
+                    final_score=normalized_score,
                 )
             )
 
         return results
 
-    def search_hybrid(self, query: str, top_k: int = 5, alpha: float = 0.7) -> List[SearchResult]:
+    def _search_across_bundles(self, query: str, top_k: int) -> List[SearchResult]:
+        local_results = self._search_bundle(query, top_k, self.local_faiss_index, self.local_urls, 0)
+        web_results = self._search_bundle(query, top_k, self.web_faiss_index, self.web_urls, len(self.local_documents))
+
+        merged_by_url: Dict[str, SearchResult] = {}
+        for item in local_results + web_results:
+            previous = merged_by_url.get(item.url)
+            if previous is None or item.score > previous.score:
+                merged_by_url[item.url] = item
+
+        merged = sorted(merged_by_url.values(), key=lambda result: result.score, reverse=True)
+        for rank, item in enumerate(merged[:top_k], start=1):
+            item.rank = rank
+        return merged[:top_k]
+
+    def _extract_media_type_filter(self, query: str) -> str | None:
+        """Extract media type filter from query (pelicula/serie)."""
+        query_lower = query.lower()
+        if any(word in query_lower for word in ["película", "peliculas", "pelicula", "film", "films", "movie", "movies"]):
+            return "pelicula"
+        if any(word in query_lower for word in ["serie", "series", "serial", "show", "shows"]):
+            return "serie"
+        return None
+
+    def search_hybrid(self, query: str, top_k: int = 5, alpha: float = 0.7, media_type_filter: str | None = None) -> List[SearchResult]:
         """Combines neural and lexical signals into a single fused ranking score."""
         if not query or not query.strip():
             raise ValueError("La consulta no puede estar vacia.")
@@ -393,51 +542,76 @@ class NeuralRetriever:
             self.ensure_ready()
 
         alpha = float(np.clip(alpha, 0.0, 1.0))
+        
+        # Auto-detect media type if not explicitly provided
+        if media_type_filter is None:
+            media_type_filter = self._extract_media_type_filter(query)
 
         query_vector = self._encode_query_normalized(query)
         # Con embeddings normalizados, producto punto == coseno.
         neural_scores = (self.embeddings @ query_vector[0]).astype(float)
         lexical_scores = self._compute_lexical_scores(query)
+        hybrid_data = compute_hybrid_fusion(neural_scores=neural_scores, lexical_scores=lexical_scores, alpha=alpha)
+        fused_scores = hybrid_data["fused_scores"]
+        metadata_scores = np.array(compute_metadata_alignment_scores(query, self.documents), dtype=float)
+        actor_scores = np.array(compute_actor_alignment_scores(query, self.documents), dtype=float)
+        season_scores = np.array(compute_season_alignment_scores(query, self.documents), dtype=float)
+        episode_scores = np.array(compute_episode_alignment_scores(query, self.documents), dtype=float)
+        year_scores = np.array(compute_year_alignment_scores(query, self.documents), dtype=float)
+        country_scores = np.array(compute_country_alignment_scores(query, self.documents), dtype=float)
+        
+        # Apply media type filter if specified
+        type_penalty = np.zeros(len(self.documents), dtype=float)
+        if media_type_filter:
+            for idx, doc in enumerate(self.documents):
+                doc_type = str(doc.get("type", "")).lower()
+                if doc_type and doc_type != media_type_filter:
+                    type_penalty[idx] = -0.8  # Strong penalty for mismatched type
+        
+        primary_scores = (
+            fused_scores
+            + (0.75 * metadata_scores)
+            + (1.35 * actor_scores)
+            + (0.9 * season_scores)
+            + (0.7 * episode_scores)
+            + (0.6 * year_scores)
+            + (0.8 * country_scores)  # Reduced from 2.0
+            + type_penalty
+        )
 
-        neural_norm = np.clip((neural_scores + 1.0) / 2.0, 0.0, 1.0)
-        max_lex = float(np.max(lexical_scores)) if lexical_scores.size else 0.0
-        if max_lex > 0:
-            lexical_norm = lexical_scores / max_lex
-        else:
-            lexical_norm = np.zeros_like(neural_norm)
-
-        # If lexical matches too many docs, reduce lexical impact automatically.
-        lex_coverage = float((lexical_scores > 0).sum()) / float(len(lexical_scores)) if len(lexical_scores) else 0.0
-        lexical_weight = (1.0 - alpha) * max(0.10, 1.0 - lex_coverage)
-        neural_weight = 1.0 - lexical_weight
-
-        fused_scores = neural_weight * neural_norm + lexical_weight * lexical_norm
-
-        top_k = max(1, min(top_k, len(fused_scores)))
-        sorted_indices = np.argsort(fused_scores)[::-1][:top_k]
+        top_k = max(1, min(top_k, len(primary_scores)))
+        sorted_indices = rank_by_positioning(
+            primary_scores=primary_scores,
+            query=query,
+            docs=self.documents,
+            original_positions=np.arange(len(self.documents)),
+            top_k=top_k,
+        )
 
         results: List[SearchResult] = []
         for rank, idx in enumerate(sorted_indices, start=1):
             doc = self.documents[idx]
+            normalized_score = float(np.clip(fused_scores[idx], 0.0, 1.0))
             results.append(
                 SearchResult(
                     rank=rank,
-                    score=float(fused_scores[idx]),
+                    score=normalized_score,
                     url=str(doc.get("url", "")),
                     title=str(doc.get("title", "Sin titulo")),
                     media_type=str(doc.get("type", "desconocido")),
                     plot=str(doc.get("plot", "")),
-                    neural_score=float(neural_scores[idx]),
-                    lexical_score=float(lexical_scores[idx]),
+                    neural_score=float(np.clip(hybrid_data["neural_norm"][idx], 0.0, 1.0)),
+                    lexical_score=float(np.clip(hybrid_data["lexical_norm"][idx], 0.0, 1.0)),
                     rerank_score=0.0,
+                    final_score=normalized_score,
                 )
             )
 
         return results
 
-    def retrieve_candidates(self, query: str, candidate_k: int = 50, alpha: float = 0.9) -> List[SearchResult]:
+    def retrieve_candidates(self, query: str, candidate_k: int = 50, alpha: float = 0.9, media_type_filter: str | None = None) -> List[SearchResult]:
         """Retrieves a broad candidate set using hybrid search for later reranking."""
-        return self.search_hybrid(query=query, top_k=candidate_k, alpha=alpha)
+        return self.search_hybrid(query=query, top_k=candidate_k, alpha=alpha, media_type_filter=media_type_filter)
 
     def rerank_candidates(
         self,
@@ -453,11 +627,6 @@ class NeuralRetriever:
 
         rerank_weight = float(np.clip(rerank_weight, 0.0, 1.0))
         base_scores = np.array([float(c.score) for c in candidates], dtype=float)
-        max_base = float(np.max(base_scores)) if base_scores.size else 0.0
-        if max_base > 0:
-            base_norm = base_scores / max_base
-        else:
-            base_norm = np.zeros_like(base_scores)
 
         try:
             reranker = self._load_reranker(reranker_model_name)
@@ -476,29 +645,65 @@ class NeuralRetriever:
                     )
                 pair_texts.append((query, doc_text))
             rerank_raw = np.array(reranker.predict(pair_texts), dtype=float)
-            rerank_norm = self._sigmoid(rerank_raw)
+            rerank_data = compute_rerank_fusion(base_scores=base_scores, rerank_raw=rerank_raw, rerank_weight=rerank_weight)
+            final_scores = rerank_data["final_scores"]
         except Exception:
             rerank_raw = np.zeros(len(candidates), dtype=float)
-            rerank_norm = np.zeros(len(candidates), dtype=float)
+            rerank_data = compute_rerank_fusion(base_scores=base_scores, rerank_raw=rerank_raw, rerank_weight=rerank_weight)
+            final_scores = rerank_data["final_scores"]
 
-        final_scores = (1.0 - rerank_weight) * base_norm + rerank_weight * rerank_norm
+        candidate_docs = [self._resolve_result_document(candidate) for candidate in candidates]
+        metadata_scores = np.array(compute_metadata_alignment_scores(query, candidate_docs), dtype=float)
+        actor_scores = np.array(compute_actor_alignment_scores(query, candidate_docs), dtype=float)
+        season_scores = np.array(compute_season_alignment_scores(query, candidate_docs), dtype=float)
+        episode_scores = np.array(compute_episode_alignment_scores(query, candidate_docs), dtype=float)
+        year_scores = np.array(compute_year_alignment_scores(query, candidate_docs), dtype=float)
+        country_scores = np.array(compute_country_alignment_scores(query, candidate_docs), dtype=float)
+        
+        # Media type penalty for mismatches
+        media_type_filter = self._extract_media_type_filter(query)
+        type_penalty = np.zeros(len(candidates), dtype=float)
+        if media_type_filter:
+            for idx, doc in enumerate(candidate_docs):
+                doc_type = str(doc.get("type", "")).lower()
+                if doc_type and doc_type != media_type_filter:
+                    type_penalty[idx] = -0.6
+        
+        final_scores = (
+            final_scores
+            + (0.20 * metadata_scores)
+            + (0.55 * actor_scores)
+            + (0.45 * season_scores)
+            + (0.55 * episode_scores)
+            + (0.40 * year_scores)
+            + (0.5 * country_scores)  # Reduced from 1.2
+            + type_penalty
+        )
         top_k = max(1, min(top_k, len(candidates)))
-        sorted_idx = np.argsort(final_scores)[::-1][:top_k]
+        sorted_idx = rank_by_positioning(
+            primary_scores=final_scores,
+            query=query,
+            docs=candidate_docs,
+            original_positions=np.arange(len(candidates)),
+            top_k=top_k,
+        )
 
         reranked: List[SearchResult] = []
         for rank, idx in enumerate(sorted_idx, start=1):
             item = candidates[idx]
+            normalized_final_score = float(np.clip(final_scores[idx], 0.0, 1.0))
             reranked.append(
                 SearchResult(
                     rank=rank,
-                    score=float(final_scores[idx]),
+                    score=normalized_final_score,
                     url=item.url,
                     title=item.title,
                     media_type=item.media_type,
                     plot=item.plot,
-                    neural_score=item.neural_score,
-                    lexical_score=item.lexical_score,
-                    rerank_score=float(rerank_raw[idx]),
+                    neural_score=float(np.clip(item.neural_score, 0.0, 1.0)),
+                    lexical_score=float(np.clip(item.lexical_score, 0.0, 1.0)),
+                    rerank_score=float(np.clip(sigmoid(rerank_raw[idx]), 0.0, 1.0)),
+                    final_score=float(final_scores[idx]),
                 )
             )
 
@@ -514,7 +719,8 @@ class NeuralRetriever:
         reranker_model_name: str | None = None,
     ) -> List[SearchResult]:
         """Executes the full retrieval pipeline: candidate retrieval + reranking."""
-        candidates = self.retrieve_candidates(query=query, candidate_k=max(candidate_k, top_k), alpha=alpha)
+        media_type_filter = self._extract_media_type_filter(query)
+        candidates = self.retrieve_candidates(query=query, candidate_k=max(candidate_k, top_k), alpha=alpha, media_type_filter=media_type_filter)
         return self.rerank_candidates(
             query=query,
             candidates=candidates,
@@ -530,9 +736,9 @@ class NeuralRetriever:
         candidate_k: int = 50,
         alpha: float = 0.9,
         rerank_weight: float = 0.75,
-        min_local_score: float = 0.72,
-        min_lexical_coverage: float = 0.75,
-        hard_min_local_score: float = 0.65,
+        min_local_score: float = 0.68,
+        min_lexical_coverage: float = 0.70,
+        hard_min_local_score: float = 0.60,
         web_max_results: int = 10,
     ) -> List[SearchResult]:
         """Runs local retrieval and triggers web expansion when confidence is low."""
@@ -547,15 +753,23 @@ class NeuralRetriever:
         top_score = float(local_results[0].score) if local_results else 0.0
         lexical_coverage = self._query_lexical_coverage(query)
 
-        needs_web_expansion = (top_score < hard_min_local_score) or (
-            (top_score < min_local_score) and (lexical_coverage < min_lexical_coverage)
+        # If the highest score is extremely low, trigger web expansion even with high lexical coverage.
+        # Otherwise, if the score is mediocre, trigger it only if lexical coverage is low.
+        high_lexical_coverage = lexical_coverage >= min_lexical_coverage
+        needs_web_expansion = (
+            (top_score < hard_min_local_score)
+            or (top_score < min_local_score and not high_lexical_coverage)
         )
 
         if not needs_web_expansion:
             return local_results
 
-        web_expander = self._load_web_expander()
-        web_documents = web_expander.expand(query=query, max_results=web_max_results)
+        try:
+            web_expander = self._load_web_expander()
+            web_documents = web_expander.expand(query=query, max_results=web_max_results)
+        except Exception as exc:
+            print(f"[WARN] Se omite la expansión web por error: {type(exc).__name__}: {exc}")
+            return local_results
 
         if not web_documents:
             return local_results

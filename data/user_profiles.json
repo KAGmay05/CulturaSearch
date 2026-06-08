@@ -1,0 +1,34 @@
+{
+  "alice": {
+    "user_id": "alice",
+    "search_history": [
+      "series de 8 temporadas",
+      "series de 8 temporadas",
+      "series de 8 temporadas"
+    ],
+    "clicked_urls": [
+      "https://www.sensacine.com/series/serie-11266/",
+      "https://www.sensacine.com/series/serie-5154/",
+      "https://www.sensacine.com/series/serie-7934/"
+    ],
+    "viewed_urls": [
+      "https://www.sensacine.com/series/serie-11266/",
+      "https://www.sensacine.com/series/serie-5154/",
+      "https://www.sensacine.com/series/serie-7934/",
+      "https://www.sensacine.com/series/serie-11542/"
+    ],
+    "genre_preferences": {
+      "histórico": 1,
+      "fantasía": 2,
+      "romántico": 2,
+      "drama": 2
+    },
+    "type_preferences": {
+      "serie": 3
+    },
+    "term_preferences": {
+      "seri": 3,
+      "tempor": 3
+    }
+  }
+}

@@ -1,8 +1,11 @@
-import requests 
+﻿import re
+import requests
 from bs4 import BeautifulSoup
 import time
 import random
 import json
+
+from crawler.robots import can_fetch_url
 
 USER_AGENTS = [
     "Mozilla/5.0 (Windows NT 10.0)",
@@ -15,6 +18,10 @@ headers = {
 }
 
 def fetch(url):
+
+    if not can_fetch_url(url):
+        print(f"[WARN] Bloqueado por robots.txt: {url}")
+        return None
 
     for _ in range(3):   
 
@@ -43,17 +50,17 @@ def parse_json_ld(soup):
             
             # Detectar tipo de contenido
             if json_data.get('@type') == 'Movie':
-                content_type = 'película'
+                content_type = 'pelÃ­cula'
                 
-                # Extraer título
+                # Extraer tÃ­tulo
                 if 'name' in json_data:
                     data['title'] = json_data['name']
                 
-                # Extraer géneros
+                # Extraer gÃ©neros
                 if 'genre' in json_data:
                     data['genres'] = json_data['genre'] if isinstance(json_data['genre'], list) else [json_data['genre']]
                 
-                # Extraer descripción (sinopsis)
+                # Extraer descripciÃ³n (sinopsis)
                 if 'description' in json_data:
                     data['plot'] = json_data['description']
                 
@@ -89,26 +96,26 @@ def parse_json_ld(soup):
             elif json_data.get('@type') == 'TVSeries':
                 content_type = 'serie'
                 
-                # Extraer título
+                # Extraer tÃ­tulo
                 if 'name' in json_data:
                     data['title'] = json_data['name']
                 
-                # Extraer géneros
+                # Extraer gÃ©neros
                 if 'genre' in json_data:
                     data['genres'] = json_data['genre'] if isinstance(json_data['genre'], list) else [json_data['genre']]
                 
-                # Extraer descripción (sinopsis)
+                # Extraer descripciÃ³n (sinopsis)
                 if 'description' in json_data:
                     data['plot'] = json_data['description']
                 
-                # Extraer número de temporadas y episodios
+                # Extraer nÃºmero de temporadas y episodios
                 if 'numberOfSeasons' in json_data:
                     data['seasons'] = json_data['numberOfSeasons']
                 
                 if 'numberOfEpisodes' in json_data:
                     data['episodes'] = json_data['numberOfEpisodes']
                 
-                # Extraer director (si está disponible)
+                # Extraer director (si estÃ¡ disponible)
                 if 'director' in json_data:
                     director_data = json_data['director']
                     if isinstance(director_data, dict):
@@ -116,7 +123,7 @@ def parse_json_ld(soup):
                     elif isinstance(director_data, list):
                         data['director'] = [d.get('name', '') if isinstance(d, dict) else d for d in director_data]
                 
-                # Extraer actores (si está disponible)
+                # Extraer actores (si estÃ¡ disponible)
                 if 'actor' in json_data:
                     actors = []
                     actor_list = json_data['actor'] if isinstance(json_data['actor'], list) else [json_data['actor']]
@@ -145,10 +152,10 @@ def parse_html(soup):
     """Extract additional data from HTML"""
     data = {}
     
-    # Extraer país, año, actores de acuerdo al tipo (película o serie)
+    # Extraer paÃ­s, aÃ±o, actores de acuerdo al tipo (pelÃ­cula o serie)
     
-    # 1. PELÍCULAS: Extraer de Especificaciones Técnicas
-    tech_section = soup.find('h2', string='Especificaciones técnicas')
+    # 1. PELÃCULAS: Extraer de Especificaciones TÃ©cnicas
+    tech_section = soup.find('h2', string='Especificaciones tÃ©cnicas')
     if tech_section:
         current = tech_section.find_next()
         while current:
@@ -162,13 +169,13 @@ def parse_html(soup):
                         
                         if 'Nacionalidad' in label:
                             data['country'] = value
-                        elif 'Año de producción' in label:
+                        elif 'AÃ±o de producciÃ³n' in label:
                             data['year'] = value
             elif current.name == 'h2':
                 break
             current = current.find_next_sibling()
     
-    # 2. PELÍCULAS: Extraer actores del HTML (sección Reparto)
+    # 2. PELÃCULAS: Extraer actores del HTML (secciÃ³n Reparto)
     # Solo si no vinieron del JSON-LD
     reparto_h2 = soup.find('h2', string='Actores y actrices')
     if reparto_h2 and 'actors' not in data:
@@ -177,7 +184,7 @@ def parse_html(soup):
             actors = []
             for link in container.find_all('a'):
                 actor_name = link.text.strip()
-                # Filtrar enlaces que son links a películas/series (contienen números de ID)
+                # Filtrar enlaces que son links a pelÃ­culas/series (contienen nÃºmeros de ID)
                 href = link.get('href', '').lower()
                 if actor_name and 'actor' in href:
                     actors.append(actor_name)
@@ -193,16 +200,16 @@ def parse_html(soup):
         
         label = first_span.text.strip()
         
-        # Extraer país (Nacionalidad)
+        # Extraer paÃ­s (Nacionalidad)
         if 'Nacionalidad' in label:
-            # El país está en los spans siguientes
+            # El paÃ­s estÃ¡ en los spans siguientes
             all_spans = item.find_all('span')
             if len(all_spans) > 1:
-                # El segundo span es el país
+                # El segundo span es el paÃ­s
                 value = all_spans[1].text.strip()
                 data['country'] = value
         
-        # Extraer creador (para series) - está en <a> tags
+        # Extraer creador (para series) - estÃ¡ en <a> tags
         elif 'Creada por' in label or 'Creador' in label:
             creators = []
             for link in item.find_all('a'):
@@ -212,7 +219,7 @@ def parse_html(soup):
             if creators:
                 data['creator'] = creators
         
-        # Extraer actores (Reparto en series) - está en spans
+        # Extraer actores (Reparto en series) - estÃ¡ en spans
         elif 'Reparto' in label:
             actors = []
             all_spans = item.find_all('span')[1:]  # Skip the label span
@@ -222,14 +229,38 @@ def parse_html(soup):
                     actors.append(actor_name)
             if actors:
                 data['actors'] = actors
-    
+
+    # Extraer rango de aÃ±os para series desde meta-body-info
+    # Contiene texto como "2011 - 2019" (finalizada) o "Desde 2020" / "2020" (en curso)
+    info_div = soup.find('div', class_='meta-body-info')
+    if info_div:
+        raw_texts = [t.strip() for t in info_div.strings if t.strip()]
+        if raw_texts:
+            raw = raw_texts[0]
+            # Intentar capturar rango completo YYYY - YYYY (con o sin espacios, guiÃ³n normal o en dash)
+            range_match = re.search(r'\b(\d{4})\s*[-â€“]\s*(\d{4})\b', raw)
+            if range_match:
+                data['year_range'] = f"{range_match.group(1)}-{range_match.group(2)}"
+            else:
+                year_match = re.search(r'\b(\d{4})\b', raw)
+                if year_match:
+                    if re.search(r'[Dd]esde', raw):
+                        data['year_range'] = f"{year_match.group(1)}-presente"
+                    else:
+                        # Solo un aÃ±o â†’ serie en curso sin aÃ±o explÃ­cito de inicio/fin
+                        data['year_range'] = f"{year_match.group(1)}-presente"
+
     return data
 
 def parse_movie(html, url):
     soup = BeautifulSoup(html, "html.parser")
 
-    # Filtrar críticas de SensaCine (URLs con /sensacine/ al final)
+    # Filtrar crÃ­ticas de SensaCine (URLs con /sensacine/ al final)
     if '/sensacine/' in url.lower():
+        return None
+
+    # Filtrar pÃ¡ginas de sesiones/cartelera (no son fichas de pelÃ­culas/series)
+    if '/sesiones' in url.lower():
         return None
 
     data = {}
@@ -245,7 +276,7 @@ def parse_movie(html, url):
     else:
         data["type"] = "pelicula"
     
-    # Extraer datos del HTML (tanto para películas como series)
+    # Extraer datos del HTML (tanto para pelÃ­culas como series)
     html_data = parse_html(soup)
     data.update(html_data)
     
@@ -261,14 +292,14 @@ def parse_movie(html, url):
     if 'plot' not in data:
         data['plot'] = None
     
-    # Para películas: director, para series: creator
+    # Para pelÃ­culas: director, para series: creator
     if data["type"] == "pelicula":
         if 'director' not in data:
             data['director'] = []
     else:  # serie
         if 'creator' not in data:
             data['creator'] = []
-        # Remover director si existía
+        # Remover director si existÃ­a
         data.pop('director', None)
     
     if 'actors' not in data:
@@ -280,17 +311,20 @@ def parse_movie(html, url):
     if 'country' not in data:
         data['country'] = None
 
-    return data
-    
-    if 'year' not in data:
-        data['year'] = None
+    if data["type"] == "serie":
+        # Series: solo usar year_range. Eliminar year y year_start para evitar duplicados/inconsistencias.
+        data.pop('year', None)
+        data.pop('year_start', None)
+    else:
+        if 'year' not in data:
+            data['year'] = None
+
 
     return data
 
 def scrape_movie(url):
-
-    html= fetch(url)
+    html = fetch(url)
     if not html:
         return None
+    return parse_movie(html, url)
 
-    return parse_movie(html,url)            

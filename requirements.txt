@@ -13,4 +13,8 @@ langchain>=0.1.0
 ollama>=0.1.0
 transformers
 torch
+torchvision
 playwright
+playwright-stealth
+curl_cffi
+streamlit>=1.32.0

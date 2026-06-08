@@ -1,3 +1,5 @@
+import os
+
 import requests
 
 
@@ -5,9 +7,9 @@ class OllamaGenerator:
     """Generador LLM usando Ollama (local)."""
     
     def __init__(self, model_name: str = "neural-chat", 
-                 endpoint: str = "http://localhost:11434"):
+                 endpoint: str | None = None):
         self.model = model_name
-        self.endpoint = endpoint
+        self.endpoint = endpoint or os.getenv("OLLAMA_ENDPOINT", "http://localhost:11434")
         self.is_available = self._check_available()
     
     def _check_available(self) -> bool:
@@ -35,7 +37,7 @@ class OllamaGenerator:
                         "num_predict": max_tokens,
                     }
                 },
-                timeout=300
+                timeout=340  # 2 minutos: tiempo razonable para generación en Ollama local
             )
             
             if response.status_code == 200:

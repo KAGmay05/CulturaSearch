@@ -1,5 +1,6 @@
 from crawler.fetcher import fetch
 from crawler.parser import extract_links
+from crawler.robots import can_fetch_url
 
 
 def crawl(seed_urls, max_pages=10):
@@ -19,6 +20,10 @@ def crawl(seed_urls, max_pages=10):
                 # Detecta si la URL ya tiene parámetros query
                 separator = "&" if "?" in seed else "?"
                 url = f"{seed}{separator}page={page}"
+
+            if not can_fetch_url(url):
+                print(f"[WARN] Saltando por robots.txt: {url}")
+                break
 
             print(f"[INFO] Visitando: {url}")
 

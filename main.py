@@ -1,4 +1,5 @@
 import argparse
+import subprocess
 import sys
 
 
@@ -20,6 +21,21 @@ def run_rag():
     rag_main()
 
 
+def run_evaluation():
+    from evaluation_module.run_evaluation import main as evaluation_main
+
+    evaluation_main()
+
+
+def run_ui():
+    command = [sys.executable, "-m", "streamlit", "run", "app.py"]
+    try:
+        subprocess.run(command, check=False)
+    except FileNotFoundError:
+        print("No se encontro Streamlit. Instala las dependencias con: pip install -r requirements.txt")
+        sys.exit(1)
+
+
 def run_full():
     run_crawler()
     run_scraper()
@@ -30,7 +46,7 @@ def build_parser():
     parser = argparse.ArgumentParser(description="CulturaSearch - runner general")
     parser.add_argument(
         "command",
-        choices=["crawl", "scrape", "rag", "full"],
+        choices=["crawl", "scrape", "rag", "ui", "eval", "full"],
         nargs="?",
         default="full",
         help="Subcomando a ejecutar",
@@ -46,6 +62,8 @@ def main():
         "crawl": run_crawler,
         "scrape": run_scraper,
         "rag": run_rag,
+        "ui": run_ui,
+        "eval": run_evaluation,
         "full": run_full,
     }
 

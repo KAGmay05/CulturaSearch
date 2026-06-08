@@ -1,0 +1,580 @@
+[
+  {
+    "query_id": "Q1",
+    "query_type": "tema",
+    "query": "peliculas de accion y artes marciales",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-109208/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-314939/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-140603/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-56029/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-43986/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-57959/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-54106/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-243918/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-270144/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000020059/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q2",
+    "query_type": "tema",
+    "query": "animacion familiar y de aventura",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-29906/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-313256/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-17463/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-247696/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-264876/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-10862/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000009065/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-273995/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-268384/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-50409/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q3",
+    "query_type": "tema",
+    "query": "comedia familiar de un perro millonario",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-25067/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-247696/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-230689/",
+        "relevance": 2
+      }
+    ]
+  },
+  {
+    "query_id": "Q4",
+    "query_type": "tema",
+    "query": "drama de memoria y aventura en el mar",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-210222/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000035906/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-9619/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-228580/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-9308/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-326680/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-60016/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-300927/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-46117/",
+        "relevance": 1
+      }
+    ]
+  },
+  {
+    "query_id": "Q5",
+    "query_type": "nombre_especifico",
+    "query": "Friends",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-49/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q6",
+    "query_type": "nombre_especifico",
+    "query": "Velvet",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-11505/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-21738/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q7",
+    "query_type": "nombre_especifico",
+    "query": "La Casa de Papel",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-21504/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q8",
+    "query_type": "metadatos_director",
+    "query": "pelicula dirigida por Quentin Tarantino",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-15002/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-60208/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-10126/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-225571/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000028176/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-53879/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-28541/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q9",
+    "query_type": "metadatos_pais",
+    "query": "serie española",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-4811/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-22373/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-18518/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-4474/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-18960/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-1000002870/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-7549/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-4461/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-24408/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-36034/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q10",
+    "query_type": "metadatos_genero",
+    "query": "serie policial espanola",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-7549/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-4474/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-4811/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-22373/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-18518/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-24408/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-24835/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-21983/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-21504/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-1000001250/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q11",
+    "query_type": "tema",
+    "query": "aventura y ciencia ficcion con inteligencia artificial",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-280993/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-326953/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-272433/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-23337/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-194887/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-235306/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-115469/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-47739/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-270936/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-261389/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q12",
+    "query_type": "tema",
+    "query": "suspense con un autor atrapado",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000040184/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000015739/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-232918/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-257170/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-35531/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000002580/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-1000002893/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-135564/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000028234/",
+        "relevance": 1
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000000912/",
+        "relevance": 1
+      }
+    ]
+  },
+  {
+    "query_id": "Q13",
+    "query_type": "metadatos_creator",
+    "query": "serie creada por Álex Pina",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-18960/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-21504/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-30852/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-1000002348/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q14",
+    "query_type": "metadatos_actor",
+    "query": "serie con Michelle Jenner",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-9786/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-30852/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-1000002348/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-22998/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-244968/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-250501/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-213964/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/peliculas/pelicula-1000029532/",
+        "relevance": 3
+      }
+    ]
+  },
+  {
+    "query_id": "Q15",
+    "query_type": "tipico_usuario",
+    "query": "serie de comedia estilo Friends",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-49/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-26533/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-18144/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-6175/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-27959/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-18765/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-9417/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-31469/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-23737/",
+        "relevance": 2
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-20381/",
+        "relevance": 2
+      }
+    ]
+  },
+  {
+    "query_id": "Q16",
+    "query_type": "tipico_usuario",
+    "query": "Pelicula de los 2000 que ocurre en otro planeta donde las personas son azules",
+    "relevant_documents": []
+  },
+  {
+    "query_id": "Q17",
+    "query_type": "tipico_usuario",
+    "query": "Serie en persona con dragones con 8 temporadas",
+    "relevant_documents": [
+      {
+        "url": "https://www.sensacine.com/series/serie-27231/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-5154/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-19136/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-22123/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-30004/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-7157/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-7934/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-4178/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-30618/",
+        "relevance": 3
+      },
+      {
+        "url": "https://www.sensacine.com/series/serie-10839/",
+        "relevance": 3
+      }
+    ]
+  }
+]
